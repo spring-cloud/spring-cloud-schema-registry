@@ -1,0 +1,16 @@
+= Spring Cloud Schema Registry Reference Documentation
+Unascribed
+
+*{spring-cloud-schema-registry-version}*
+
+:docinfo: shared
+
+The reference documentation consists of the following sections:
+
+[horizontal]
+<<spring-cloud-schema-registry.adoc#,Reference Guide>> :: Spring Cloud Schema Registry Reference
+
+Relevant Links:
+
+[horizontal]
+https://spring.io/projects/spring-cloud-stream[Spring Cloud Stream] :: Spring Cloud Stream

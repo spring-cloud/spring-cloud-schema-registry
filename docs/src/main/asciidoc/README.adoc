@@ -1,0 +1,42 @@
+== Spring Cloud Schema Registry
+
+When organizations have a messaging based pub/sub architecture and multiple producer and consumer microservices communicate each other, it is often necessary for all those microservices to agree on a contract that is based on a schema.
+When such a schema needs to evolve to accommodate new business requirements, the existing components are still required to continue to work.
+This project provides support for a standalone schema registry server using which aforementioned schema can be registered and used by the applications.
+It also contains support for avro based schema registry clients, which essentially provide message converters that communicates with the schema registry for reconciling schema during message conversion.
+The schema evolution support provided by this project works both with the aforementioned standalone schema registry as well as the scheam registry provided by Confluent that specifically works with Apache Kafka.
+
+==== Spring Cloud Schema Registry overview
+
+Spring Cloud Schema Registry provides support for schema evolution so that the data can be evolved over time and still work with older or newer producers and consumers and vice versa. Most serialization models, especially the ones that aim for portability across different platforms and languages, rely on a schema that describes how the data is serialized in the binary payload. In order to serialize the data and then to interpret it, both the sending and receiving sides must have access to a schema that describes the binary format. In certain cases, the schema can be inferred from the payload type on serialization or from the target type on deserialization.
+However, many applications benefit from having access to an explicit schema that describes the binary data format.
+A schema registry lets you store schema information in a textual format (typically JSON) and makes that information accessible to various applications that need it to receive and send data in binary format.
+A schema is referenceable as a tuple consisting of:
+
+* A subject that is the logical name of the schema
+
+* The schema version
+
+* The schema format, which describes the binary format of the data
+
+Spring Cloud Schema Registry provides the following compoents
+
+* Standalone Schema Registry Server
+
+  By default, it is using an H2 database, but server can be used with other databases by providing appropriate datasource configuration.
+
+* Schema registry clients capable of message marshalling by communicating with a Schema Registry.
+
+  Currently, the client can communicate to the standalone schema registry or the Confluent Schema Registry.
+
+== Project page
+
+You can read more about Spring Cloud Schema Registry by going to https://spring.io/projects/spring-cloud-schema-registry[the project page]
+
+== Building
+
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
+
+== Contributing
+
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/contributing.adoc[]
