@@ -33,6 +33,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
@@ -82,9 +83,7 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 		Integer id = null;
 		String payload = null;
 		Map<String, String> maps = new HashMap<>();
-		maps.put("subject", subject);
-		maps.put("format", format);
-		maps.put("definition", schema);
+		maps.put("schema", schema);
 		try {
 			payload = this.mapper.writeValueAsString(maps);
 		}
@@ -93,16 +92,31 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 		}
 		try {
 			HttpEntity<String> request = new HttpEntity<>(payload, headers);
-			ResponseEntity<Map> response = this.template.exchange(this.endpoint,
+			ResponseEntity<Map> response = this.template.exchange(this.endpoint + "/subjects/" + subject + "/versions",
 					HttpMethod.POST, request, Map.class);
 			id = (Integer) response.getBody().get("id");
-			version = (Integer) ((Map) response.getBody()).get("version");
 		}
 		catch (HttpStatusCodeException httpException) {
 			throw new RuntimeException(String.format(
 					"Failed to register subject %s, server replied with status %d",
 					subject, httpException.getStatusCode().value()), httpException);
 		}
+
+		try {
+			ResponseEntity<List> response = this.template.getForEntity(this.endpoint + "/subjects/" + subject + "/versions",
+					List.class);
+
+			final List body = response.getBody();
+			if (!CollectionUtils.isEmpty(body)) {
+				version = (Integer) body.get(body.size() - 1);
+			}
+		}
+		catch (HttpStatusCodeException httpException) {
+			throw new RuntimeException(String.format(
+					"Failed to register subject %s, server replied with status %d",
+					subject, httpException.getStatusCode().value()), httpException);
+		}
+
 		SchemaRegistrationResponse schemaRegistrationResponse = new SchemaRegistrationResponse();
 		schemaRegistrationResponse.setId(id);
 		schemaRegistrationResponse
@@ -112,8 +126,8 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 
 	@Override
 	public String fetch(SchemaReference schemaReference) {
-		String path = String.format("/%s/%s/v%d",
-				schemaReference.getSubject(), schemaReference.getFormat(), schemaReference.getVersion());
+		String path = String.format("/subjects/%s/versions/%d",
+				schemaReference.getSubject(), schemaReference.getVersion());
 		HttpHeaders headers = new HttpHeaders();
 		headers.put("Accept", ACCEPT_HEADERS);
 		headers.add("Content-Type", "application/vnd.schemaregistry.v1+json");

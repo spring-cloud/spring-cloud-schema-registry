@@ -58,11 +58,16 @@ public class ConfluentSchemaRegistryClientTests {
 	@Test
 	public void registerSchema() throws Exception {
 		this.mockRestServiceServer
-				.expect(requestTo("http://localhost:8081"))
+				.expect(requestTo("http://localhost:8081/subjects/user/versions"))
 				.andExpect(method(HttpMethod.POST))
 				.andExpect(header("Content-Type", "application/json"))
 				.andExpect(header("Accept", "application/vnd.schemaregistry.v1+json"))
 				.andRespond(withSuccess("{\"id\":101,\"version\":1}", MediaType.APPLICATION_JSON));
+
+		this.mockRestServiceServer
+				.expect(requestTo("http://localhost:8081/subjects/user/versions"))
+				.andExpect(method(HttpMethod.GET))
+				.andRespond((withSuccess("[1]", MediaType.APPLICATION_JSON)));
 
 		ConfluentSchemaRegistryClient client = new ConfluentSchemaRegistryClient(
 				this.restTemplate);
@@ -75,7 +80,7 @@ public class ConfluentSchemaRegistryClientTests {
 	@Test(expected = RuntimeException.class)
 	public void registerWithInvalidJson() {
 		this.mockRestServiceServer
-				.expect(requestTo("http://localhost:8081"))
+				.expect(requestTo("http://localhost:8081/subjects/user/versions"))
 				.andExpect(method(HttpMethod.POST))
 				.andExpect(header("Content-Type", "application/json"))
 				.andExpect(header("Accept", "application/vnd.schemaregistry.v1+json"))
@@ -88,7 +93,7 @@ public class ConfluentSchemaRegistryClientTests {
 	@Test
 	public void registerIncompatibleSchema() {
 		this.mockRestServiceServer
-				.expect(requestTo("http://localhost:8081"))
+				.expect(requestTo("http://localhost:8081/subjects/user/versions"))
 				.andExpect(method(HttpMethod.POST))
 				.andExpect(header("Content-Type", "application/json"))
 				.andExpect(header("Accept", "application/vnd.schemaregistry.v1+json"))
@@ -110,7 +115,7 @@ public class ConfluentSchemaRegistryClientTests {
 	@Test
 	public void findByReference() {
 		this.mockRestServiceServer
-				.expect(requestTo("http://localhost:8081/user/avro/v1"))
+				.expect(requestTo("http://localhost:8081/subjects/user/versions/1"))
 				.andExpect(method(HttpMethod.GET))
 				.andExpect(
 						header("Content-Type", "application/vnd.schemaregistry.v1+json"))
@@ -127,7 +132,7 @@ public class ConfluentSchemaRegistryClientTests {
 	@Test(expected = SchemaNotFoundException.class)
 	public void schemaNotFound() {
 		this.mockRestServiceServer
-				.expect(requestTo("http://localhost:8081/user/avro/v1"))
+				.expect(requestTo("http://localhost:8081/subjects/user/versions/1"))
 				.andExpect(method(HttpMethod.GET))
 				.andExpect(
 						header("Content-Type", "application/vnd.schemaregistry.v1+json"))
@@ -142,7 +147,7 @@ public class ConfluentSchemaRegistryClientTests {
 	@Test
 	public void responseErrorFetch() {
 		this.mockRestServiceServer
-				.expect(requestTo("http://localhost:8081"))
+				.expect(requestTo("http://localhost:8081/subjects/user/versions"))
 				.andExpect(method(HttpMethod.POST))
 				.andExpect(header("Content-Type", "application/json"))
 				.andExpect(header("Accept", "application/vnd.schemaregistry.v1+json"))
