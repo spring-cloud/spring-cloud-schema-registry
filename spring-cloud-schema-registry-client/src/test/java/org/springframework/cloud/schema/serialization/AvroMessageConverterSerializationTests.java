@@ -178,7 +178,7 @@ public class AvroMessageConverterSerializationTests {
 		assertThat(genericRef.getVersion()).isEqualTo(1);
 	}
 
-	//@Test
+	/**
 	public void testOriginalContentTypeHeaderOnly() throws Exception {
 		User specificRecord = new User();
 		specificRecord.setName("joe");
@@ -209,6 +209,7 @@ public class AvroMessageConverterSerializationTests {
 		assertThat(specificRecord.getName().toString())
 				.isEqualTo(((User) converted).getName().toString());
 	}
+	**/
 
 	private SchemaReference extractSchemaReference(MimeType mimeType) {
 		SchemaReference schemaReference = null;
