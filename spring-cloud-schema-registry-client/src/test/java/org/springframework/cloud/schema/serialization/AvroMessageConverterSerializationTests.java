@@ -178,7 +178,7 @@ public class AvroMessageConverterSerializationTests {
 		assertThat(genericRef.getVersion()).isEqualTo(1);
 	}
 
-	@Test
+	//@Test
 	public void testOriginalContentTypeHeaderOnly() throws Exception {
 		User specificRecord = new User();
 		specificRecord.setName("joe");
