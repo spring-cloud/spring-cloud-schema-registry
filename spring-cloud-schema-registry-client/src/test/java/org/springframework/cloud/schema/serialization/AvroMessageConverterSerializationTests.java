@@ -50,7 +50,6 @@ import org.springframework.cloud.schema.registry.avro.AvroSchemaServiceManagerIm
 import org.springframework.cloud.schema.registry.avro.DefaultSubjectNamingStrategy;
 import org.springframework.cloud.schema.registry.client.DefaultSchemaRegistryClient;
 import org.springframework.cloud.schema.registry.client.SchemaRegistryClient;
-import org.springframework.cloud.stream.binder.BinderHeaders;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.integration.support.MutableMessageHeaders;
@@ -178,7 +177,6 @@ public class AvroMessageConverterSerializationTests {
 		assertThat(genericRef.getVersion()).isEqualTo(1);
 	}
 
-	/**
 	public void testOriginalContentTypeHeaderOnly() throws Exception {
 		User specificRecord = new User();
 		specificRecord.setName("joe");
@@ -201,15 +199,13 @@ public class AvroMessageConverterSerializationTests {
 		Message source = MessageBuilder.withPayload(baos.toByteArray())
 				.setHeader(MessageHeaders.CONTENT_TYPE,
 						MimeTypeUtils.APPLICATION_OCTET_STREAM)
-				.setHeader(BinderHeaders.BINDER_ORIGINAL_CONTENT_TYPE,
-						"application/vnd.user.v1+avro")
 				.build();
 		Object converted = converter.fromMessage(source, User.class);
 		assertThat(converted).isNotNull();
 		assertThat(specificRecord.getName().toString())
 				.isEqualTo(((User) converted).getName().toString());
 	}
-	**/
+
 
 	private SchemaReference extractSchemaReference(MimeType mimeType) {
 		SchemaReference schemaReference = null;
