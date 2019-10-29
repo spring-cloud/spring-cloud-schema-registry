@@ -1,2 +1,6 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.schema.registry.avro.AvroMessageConverterAutoConfiguration
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  org.springframework.cloud.schema.registry.client.config.SchemaRegistryClientPropertiesBackwardCompatibilityEnvironmentPostProcessor,\
+  org.springframework.cloud.schema.registry.avro.AvroMessageConverterPropertiesBackwardCompatibilityEnvironmentPostProcessor
+

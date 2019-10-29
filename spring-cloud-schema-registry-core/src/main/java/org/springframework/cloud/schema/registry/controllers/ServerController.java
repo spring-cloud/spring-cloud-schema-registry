@@ -50,9 +50,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * @author Vinicius Carvalho
  * @author Ilayaperumal Gopinathan
  * @author Jeff Maxwell
+ * @author Christian Tzolov
  */
 @RestController
-@RequestMapping(path = "${spring.cloud.stream.schema.server.path:}")
+@RequestMapping(path = "${spring.cloud.schema.server.path:}")
 public class ServerController {
 
 	private final SchemaRepository repository;

@@ -17,6 +17,8 @@
 package org.springframework.cloud.schema.serialization;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +27,8 @@ import example.avro.Command;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
 
 import org.springframework.beans.DirectFieldAccessor;
@@ -36,7 +40,6 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.NoOpCache;
 import org.springframework.cache.support.NoOpCacheManager;
-import org.springframework.cloud.schema.avro.StubSchemaRegistryClient;
 import org.springframework.cloud.schema.avro.User1;
 import org.springframework.cloud.schema.avro.User2;
 import org.springframework.cloud.schema.registry.EnableSchemaRegistryServer;
@@ -45,7 +48,6 @@ import org.springframework.cloud.schema.registry.avro.AvroSchemaServiceManager;
 import org.springframework.cloud.schema.registry.avro.AvroSchemaServiceManagerImpl;
 import org.springframework.cloud.schema.registry.client.DefaultSchemaRegistryClient;
 import org.springframework.cloud.schema.registry.client.EnableSchemaRegistryClient;
-import org.springframework.cloud.schema.registry.client.SchemaRegistryClient;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.cloud.stream.messaging.Sink;
@@ -69,12 +71,25 @@ import static org.springframework.cloud.schema.serialization.AvroMessageConverte
  * @author Oleg Zhurakousky
  * @author Sercan Karaoglu
  * @author James Gee
+ * @author Christian Tzolov
  */
+@RunWith(Parameterized.class)
 public class AvroSchemaRegistryClientMessageConverterTests {
 
-	static SchemaRegistryClient stubSchemaRegistryClient = new StubSchemaRegistryClient();
+	private String propertyPrefix;
 
 	private ConfigurableApplicationContext schemaRegistryServerContext;
+
+	public AvroSchemaRegistryClientMessageConverterTests(String propertyPrefix) {
+		this.propertyPrefix = propertyPrefix;
+	}
+
+	// Use parametrization to test the deprecated prefix (spring.cloud.stream) is handled as the new (spring.cloud)
+	// prefix.
+	@Parameterized.Parameters
+	public static Collection primeNumbers() {
+		return Arrays.asList("spring.cloud.stream", "spring.cloud");
+	}
 
 	@Before
 	public void setup() {
@@ -95,7 +110,7 @@ public class AvroSchemaRegistryClientMessageConverterTests {
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=application/*+avro",
-				"--spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled=true");
+				"--" + propertyPrefix + ".schema.avro.dynamicSchemaGenerationEnabled=true");
 		Source source = sourceContext.getBean(Source.class);
 		User1 firstOutboundFoo = new User1();
 		firstOutboundFoo.setFavoriteColor("foo" + UUID.randomUUID().toString());
@@ -110,7 +125,7 @@ public class AvroSchemaRegistryClientMessageConverterTests {
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=application/vnd.user1.v1+avro",
-				"--spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled=true");
+				"--" + propertyPrefix + ".schema.avro.dynamicSchemaGenerationEnabled=true");
 		Source barSource = barSourceContext.getBean(Source.class);
 		User2 firstOutboundUser2 = new User2();
 		firstOutboundUser2.setFavoriteColor("foo" + UUID.randomUUID().toString());
@@ -170,12 +185,12 @@ public class AvroSchemaRegistryClientMessageConverterTests {
 	@Test
 	public void testSchemaImportConfiguration() throws Exception {
 		final String[] args = { "--server.port=0", "--spring.jmx.enabled=false",
-				"--spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled=true",
+				"--" + propertyPrefix + ".schema.avro.dynamicSchemaGenerationEnabled=true",
 				"--spring.cloud.stream.bindings.output.contentType=application/*+avro",
 				"--spring.cloud.stream.bindings.output.destination=test",
 				"--spring.cloud.stream.bindings.schema-registry-client.endpoint=http://localhost:8990",
-				"--spring.cloud.stream.schema.avro.schema-locations=classpath:schemas/Command.avsc",
-				"--spring.cloud.stream.schema.avro.schema-imports=classpath:schemas/imports/Sms.avsc,"
+				"--" + propertyPrefix + ".schema.avro.schema-locations=classpath:schemas/Command.avsc",
+				"--" + propertyPrefix + ".schema.avro.schema-imports=classpath:schemas/imports/Sms.avsc,"
 						+ " classpath:schemas/imports/Email.avsc, classpath:schemas/imports/PushNotification.avsc" };
 
 		final ConfigurableApplicationContext sourceContext = SpringApplication
@@ -202,13 +217,15 @@ public class AvroSchemaRegistryClientMessageConverterTests {
 
 	@Test
 	public void testNoCacheConfiguration() {
-		ConfigurableApplicationContext sourceContext = SpringApplication
-				.run(NoCacheConfiguration.class, "--spring.main.web-environment=false");
-		AvroSchemaRegistryClientMessageConverter converter = sourceContext
-				.getBean(AvroSchemaRegistryClientMessageConverter.class);
-		DirectFieldAccessor accessor = new DirectFieldAccessor(converter);
-		assertThat(accessor.getPropertyValue("cacheManager"))
-				.isInstanceOf(NoOpCacheManager.class);
+		if (propertyPrefix.equalsIgnoreCase("spring.cloud.stream")) {
+			ConfigurableApplicationContext sourceContext = SpringApplication
+					.run(NoCacheConfiguration.class, "--spring.main.web-environment=false");
+			AvroSchemaRegistryClientMessageConverter converter = sourceContext
+					.getBean(AvroSchemaRegistryClientMessageConverter.class);
+			DirectFieldAccessor accessor = new DirectFieldAccessor(converter);
+			assertThat(accessor.getPropertyValue("cacheManager"))
+					.isInstanceOf(NoOpCacheManager.class);
+		}
 	}
 
 	@Test

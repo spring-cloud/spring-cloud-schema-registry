@@ -21,8 +21,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * @author Vinicius Carvalho
  * @author Ilayaperumal Gopinathan
+ * @author Christian Tzolov
  */
-@ConfigurationProperties("spring.cloud.stream.schema.server")
+@ConfigurationProperties("spring.cloud.schema.server")
 public class SchemaServerProperties {
 
 	/**
