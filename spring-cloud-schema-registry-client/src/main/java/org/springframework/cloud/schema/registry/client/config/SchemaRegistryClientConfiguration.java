@@ -34,9 +34,6 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(SchemaRegistryClientProperties.class)
 public class SchemaRegistryClientConfiguration {
 
-//	@Autowired
-//	private SchemaRegistryClientProperties schemaRegistryClientProperties;
-
 	@Bean
 	@ConditionalOnMissingBean
 	public SchemaRegistryClient schemaRegistryClient(SchemaRegistryClientProperties schemaRegistryClientProperties) {

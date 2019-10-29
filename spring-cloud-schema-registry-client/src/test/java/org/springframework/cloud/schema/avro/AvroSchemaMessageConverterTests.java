@@ -59,7 +59,6 @@ public class AvroSchemaMessageConverterTests {
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
 				"--schemaLocation=classpath:schemas/users_v1.schema",
-				"--spring.cloud.stream.schemaRegistryClient.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=avro/bytes");
 		Source source = sourceContext.getBean(Source.class);
 		User1 firstOutboundFoo = new User1();
@@ -75,7 +74,6 @@ public class AvroSchemaMessageConverterTests {
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
 				"--schemaLocation=classpath:schemas/users_v1.schema",
-				"--spring.cloud.stream.schemaRegistryClient.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=avro/bytes");
 		Source barSource = barSourceContext.getBean(Source.class);
 		User2 firstOutboundUser2 = new User2();
@@ -101,7 +99,6 @@ public class AvroSchemaMessageConverterTests {
 		ConfigurableApplicationContext sinkContext = SpringApplication.run(
 				AvroSinkApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
-				"--spring.cloud.stream.schemaRegistryClient.enabled=false",
 				"--schemaLocation=classpath:schemas/users_v1.schema");
 		Sink sink = sinkContext.getBean(Sink.class);
 		sink.input().send(outboundMessage);
@@ -135,7 +132,6 @@ public class AvroSchemaMessageConverterTests {
 		ConfigurableApplicationContext sourceContext = SpringApplication.run(
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
-				"--spring.cloud.stream.schemaRegistryClient.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=avro/bytes");
 		Source source = sourceContext.getBean(Source.class);
 		User1 firstOutboundFoo = new User1();
@@ -150,7 +146,6 @@ public class AvroSchemaMessageConverterTests {
 		ConfigurableApplicationContext barSourceContext = SpringApplication.run(
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
-				"--spring.cloud.stream.schemaRegistryClient.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=avro/bytes");
 		Source barSource = barSourceContext.getBean(Source.class);
 		User2 firstOutboundUser2 = new User2();
@@ -175,8 +170,7 @@ public class AvroSchemaMessageConverterTests {
 
 		ConfigurableApplicationContext sinkContext = SpringApplication.run(
 				AvroSinkApplication.class, "--server.port=0",
-				"--spring.jmx.enabled=false",
-				"--spring.cloud.stream.schemaRegistryClient.enabled=false");
+				"--spring.jmx.enabled=false");
 		Sink sink = sinkContext.getBean(Sink.class);
 		sink.input().send(outboundMessage);
 		sink.input().send(barOutboundMessage);

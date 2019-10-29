@@ -17,11 +17,15 @@
 package org.springframework.cloud.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -40,10 +44,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marius Bogoevici
+ * @author Christian Tzolov
  */
+@RunWith(Parameterized.class)
 public class AvroStubSchemaRegistryClientMessageConverterTests {
 
+	private String propertyPrefix;
+
 	static SchemaRegistryClient stubSchemaRegistryClient = new StubSchemaRegistryClient();
+
+	public AvroStubSchemaRegistryClientMessageConverterTests(String propertyPrefix) {
+		this.propertyPrefix = propertyPrefix;
+	}
+
+	// Use parametrization to test the deprecated prefix (spring.cloud.stream) is handled as the new (spring.cloud)
+	// prefix.
+	@Parameterized.Parameters
+	public static Collection primeNumbers() {
+		return Arrays.asList("spring.cloud.stream", "spring.cloud");
+	}
 
 	@Test
 	public void testSendMessage() throws Exception {
@@ -51,7 +70,7 @@ public class AvroStubSchemaRegistryClientMessageConverterTests {
 				AvroSourceApplication.class, "--server.port=0", "--debug",
 				"--spring.jmx.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=application/*+avro",
-				"--spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled=true");
+				"--" + propertyPrefix + ".schema.avro.dynamicSchemaGenerationEnabled=true");
 		Source source = sourceContext.getBean(Source.class);
 		User1 firstOutboundFoo = new User1();
 		firstOutboundFoo.setFavoriteColor("foo" + UUID.randomUUID().toString());
@@ -66,7 +85,7 @@ public class AvroStubSchemaRegistryClientMessageConverterTests {
 				AvroSourceApplication.class, "--server.port=0",
 				"--spring.jmx.enabled=false",
 				"--spring.cloud.stream.bindings.output.contentType=application/vnd.user1.v1+avro",
-				"--spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled=true");
+				"--" + propertyPrefix + ".schema.avro.dynamicSchemaGenerationEnabled=true");
 		Source barSource = barSourceContext.getBean(Source.class);
 		User2 firstOutboundUser2 = new User2();
 		firstOutboundUser2.setFavoriteColor("foo" + UUID.randomUUID().toString());

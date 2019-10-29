@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.schema.avro;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -38,20 +42,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author David Kalosi
  * @author José A. Íñigo
+ * @author Christian Tzolov
  */
+@RunWith(Parameterized.class)
 public class SubjectNamingStrategyTest {
 
+	private String propertyPrefix;
+
 	private static StubSchemaRegistryClient stubSchemaRegistryClient = new StubSchemaRegistryClient();
+
+	public SubjectNamingStrategyTest(String propertyPrefix) {
+		this.propertyPrefix = propertyPrefix;
+	}
+
+	// Use parametrization to test the deprecated prefix (spring.cloud.stream) is handled as the new (spring.cloud)
+	// prefix.
+	@Parameterized.Parameters
+	public static Collection primeNumbers() {
+		return Arrays.asList("spring.cloud.stream", "spring.cloud");
+	}
 
 	@Test
 	public void testQualifiedSubjectNamingStrategy() throws Exception {
 		ConfigurableApplicationContext sourceContext = SpringApplication.run(
-			AvroSourceApplication.class, "--server.port=0", "--debug",
-			"--spring.jmx.enabled=false",
-			"--spring.cloud.stream.bindings.output.contentType=application/*+avro",
-			"--spring.cloud.stream.schema.avro.subjectNamingStrategy="
-				+ "org.springframework.cloud.schema.registry.avro.QualifiedSubjectNamingStrategy",
-			"--spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled=true");
+				AvroSourceApplication.class, "--server.port=0", "--debug",
+				"--spring.jmx.enabled=false",
+				"--spring.cloud.stream.bindings.output.contentType=application/*+avro",
+				"--" + propertyPrefix + ".schema.avro.subjectNamingStrategy="
+						+ "org.springframework.cloud.schema.registry.avro.QualifiedSubjectNamingStrategy",
+				"--" + propertyPrefix + ".schema.avro.dynamicSchemaGenerationEnabled=true");
 
 		Source source = sourceContext.getBean(Source.class);
 		User1 user1 = new User1();
@@ -60,12 +79,12 @@ public class SubjectNamingStrategyTest {
 		source.output().send(MessageBuilder.withPayload(user1).build());
 
 		MessageCollector barSourceMessageCollector = sourceContext
-			.getBean(MessageCollector.class);
+				.getBean(MessageCollector.class);
 		Message<?> message = barSourceMessageCollector.forChannel(source.output())
-			.poll(1000, TimeUnit.MILLISECONDS);
+				.poll(1000, TimeUnit.MILLISECONDS);
 
 		assertThat(message.getHeaders().get("contentType")).isEqualTo(MimeType.valueOf(
-			"application/vnd.org.springframework.cloud.schema.avro.User1.v1+avro"));
+				"application/vnd.org.springframework.cloud.schema.avro.User1.v1+avro"));
 	}
 
 	@EnableBinding(Source.class)

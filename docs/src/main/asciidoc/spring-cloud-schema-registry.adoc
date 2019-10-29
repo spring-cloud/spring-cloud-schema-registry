@@ -17,7 +17,7 @@ When organizations have a messaging based pub/sub architecture and multiple prod
 When such a schema needs to evolve to accommodate new business requirements, the existing components are still required to continue to work.
 This project provides support for a standalone schema registry server using which aforementioned schema can be registered and used by the applications.
 It also contains support for avro based schema registry clients, which essentially provide message converters that communicates with the schema registry for reconciling schema during message conversion.
-The schema evolution support provided by this project works both with the aforementioned standalone schema registry as well as the scheam registry provided by Confluent that specifically works with Apache Kafka.
+The schema evolution support provided by this project works both with the aforementioned standalone schema registry as well as the schema registry provided by Confluent that specifically works with Apache Kafka.
 
 ==== Spring Cloud Schema Registry overview
 
@@ -76,17 +76,17 @@ A client for the Spring Cloud Stream schema registry can be configured by using 
 NOTE: The default converter is optimized to cache not only the schemas from the remote server but also the `parse()` and `toString()` methods, which are quite expensive.
 Because of this, it uses a `DefaultSchemaRegistryClient` that does not cache responses.
 If you intend to change the default behavior, you can use the client directly on your code and override it to the desired outcome.
-To do so, you have to add the property `spring.cloud.stream.schemaRegistryClient.cached=true` to your application properties.
+To do so, you have to add the property `spring.cloud.schemaRegistryClient.cached=true` to your application properties.
 
 ==== Schema Registry Client Properties
 
 The Schema Registry Client supports the following properties:
 
-`spring.cloud.stream.schemaRegistryClient.endpoint`:: The location of the schema-server.
+`spring.cloud.schemaRegistryClient.endpoint`:: The location of the schema-server.
 When setting this, use a full URL, including protocol (`http` or `https`) , port, and context path.
 +
 Default:: `http://localhost:8990/`
-`spring.cloud.stream.schemaRegistryClient.cached`:: Whether the client should cache schema server responses.
+`spring.cloud.schemaRegistryClient.cached`:: Whether the client should cache schema server responses.
 Normally set to `false`, as the caching happens in the message converter.
 Clients using the schema registry client should set this to `true`.
 +
@@ -117,21 +117,21 @@ When receiving messages, the converter infers the schema reference from the head
 
 If you have enabled Avro based schema registry client by setting `spring.cloud.stream.bindings.output.contentType=application/*+avro`, you can customize the behavior of the registration by setting the following properties.
 
-spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled:: Enable if you want the converter to use reflection to infer a Schema from a POJO.
+spring.cloud.schema.avro.dynamicSchemaGenerationEnabled:: Enable if you want the converter to use reflection to infer a Schema from a POJO.
 +
 Default: `false`
 +
-spring.cloud.stream.schema.avro.readerSchema:: Avro compares schema versions by looking at a writer schema (origin payload) and a reader schema (your application payload). See the https://avro.apache.org/docs/1.7.6/spec.html[Avro documentation] for more information. If set, this overrides any lookups at the schema server and uses the local schema as the reader schema.
+spring.cloud.schema.avro.readerSchema:: Avro compares schema versions by looking at a writer schema (origin payload) and a reader schema (your application payload). See the https://avro.apache.org/docs/1.7.6/spec.html[Avro documentation] for more information. If set, this overrides any lookups at the schema server and uses the local schema as the reader schema.
 Default: `null`
 +
-spring.cloud.stream.schema.avro.schemaLocations:: Registers any `.avsc` files listed in this property with the Schema Server.
+spring.cloud.schema.avro.schemaLocations:: Registers any `.avsc` files listed in this property with the Schema Server.
 +
 Default: `empty`
 +
-spring.cloud.stream.schema.avro.prefix:: The prefix to be used on the Content-Type header.
+spring.cloud.schema.avro.prefix:: The prefix to be used on the Content-Type header.
 +
 Default: `vnd`
-spring.cloud.stream.schema.avro.subjectNamingStrategy:: Determines the subject name used to register the Avro schema in the schema registry. Two implementations are available, `org.springframework.cloud.stream.schema.avro.DefaultSubjectNamingStrategy`,
+spring.cloud.schema.avro.subjectNamingStrategy:: Determines the subject name used to register the Avro schema in the schema registry. Two implementations are available, `org.springframework.cloud.stream.schema.avro.DefaultSubjectNamingStrategy`,
 where the subject is the schema name, and `org.springframework.cloud.stream.schema.avro.QualifiedSubjectNamingStrategy`, which returns a fully qualified subject using the Avro schema namespace and name. Custom strategies can be created by implementing `org.springframework.cloud.stream.schema.avro.SubjectNamingStrategy`.
 +
 Default: `org.springframework.cloud.stream.schema.avro.DefaultSubjectNamingStrategy`
@@ -196,10 +196,10 @@ public static class SinkApplication {
 === Schema Registry Server
 
 Spring Cloud Stream provides a schema registry server implementation.
-To use it, you can add the `spring-cloud-stream-schema-server` artifact to your project and use the `@EnableSchemaRegistryServer` annotation, which adds the schema registry server REST controller to your application.
+To use it, you can add the `spring-cloud-schema-server` artifact to your project and use the `@EnableSchemaRegistryServer` annotation, which adds the schema registry server REST controller to your application.
 This annotation is intended to be used with Spring Boot web applications, and the listening port of the server is controlled by the `server.port` property.
-The `spring.cloud.stream.schema.server.path` property can be used to control the root path of the schema server (especially when it is embedded in other applications).
-The `spring.cloud.stream.schema.server.allowSchemaDeletion` boolean property enables the deletion of a schema. By default, this is disabled.
+The `spring.cloud.schema.server.path` property can be used to control the root path of the schema server (especially when it is embedded in other applications).
+The `spring.cloud.schema.server.allowSchemaDeletion` boolean property enables the deletion of a schema. By default, this is disabled.
 
 The schema registry server uses a relational database to store the schemas.
 By default, it uses an embedded database.
@@ -317,7 +317,7 @@ If you want to use the Confluent schema registry, you need to create a bean of t
 [source,java]
 ----
 @Bean
-public SchemaRegistryClient schemaRegistryClient(@Value("${spring.cloud.stream.schemaRegistryClient.endpoint}") String endpoint){
+public SchemaRegistryClient schemaRegistryClient(@Value("${spring.cloud.schemaRegistryClient.endpoint}") String endpoint){
   ConfluentSchemaRegistryClient client = new ConfluentSchemaRegistryClient();
   client.setEndpoint(endpoint);
   return client;
@@ -337,7 +337,7 @@ To better understand how Spring Cloud Stream registers and resolves new schemas 
 
 The first part of the registration process is extracting a schema from the payload that is being sent over a channel.
 Avro types such as `SpecificRecord` or `GenericRecord` already contain a schema, which can be retrieved immediately from the instance.
-In the case of POJOs, a schema is inferred if the `spring.cloud.stream.schema.avro.dynamicSchemaGenerationEnabled` property is set to `true` (the default).
+In the case of POJOs, a schema is inferred if the `spring.cloud.schema.avro.dynamicSchemaGenerationEnabled` property is set to `true` (the default).
 
 .Schema Writer Resolution Process
 image::{github-raw}/docs/src/main/asciidoc/images/schema_resolution.png[width=800,scaledwidth="75%",align="center"]
