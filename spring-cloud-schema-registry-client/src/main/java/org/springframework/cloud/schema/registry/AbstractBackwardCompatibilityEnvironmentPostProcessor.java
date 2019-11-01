@@ -26,6 +26,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Override deprecated properties for backward compatibility.
@@ -54,7 +55,7 @@ public abstract class AbstractBackwardCompatibilityEnvironmentPostProcessor impl
 		}
 
 		// This post-processor is called multiple times but sets the properties only once.
-		if (!properties.isEmpty()) {
+		if (!CollectionUtils.isEmpty(properties)) {
 			logger.info(" 'spring.cloud.stream.schemaXXX' property prefix detected! " +
 					"Use the 'spring.schemaXXX' prefix instead!");
 			PropertiesPropertySource propertiesPropertySource =
