@@ -11,7 +11,7 @@ A schema is referenceable as a tuple consisting of:
 
 * The schema format, which describes the binary format of the data
 
-Spring Cloud Schema Registry provides the following compoents
+Spring Cloud Schema Registry provides the following components
 
 * Standalone Schema Registry Server
 
