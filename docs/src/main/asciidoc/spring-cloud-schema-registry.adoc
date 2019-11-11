@@ -5,8 +5,7 @@ Unascribed
 *{spring-cloud-schema-registry-version}*
 
 ---
-
-:github: https://github.com/spring-cloud/spring-cloud-schema-registry
+:github: https://raw.githubusercontent.com/spring-cloud/spring-cloud-schema-registry/master
 :githubmaster: {github}/tree/master
 :docslink: {githubmaster}/docs/src/main/asciidoc
 :nofooter:
@@ -32,7 +31,7 @@ A schema is referenceable as a tuple consisting of:
 
 * The schema format, which describes the binary format of the data
 
-Spring Cloud Schema Registry provides the following compoents
+Spring Cloud Schema Registry provides the following components
 
 * Standalone Schema Registry Server
 
@@ -69,7 +68,7 @@ A client for the Spring Cloud Stream schema registry can be configured by using 
   @SpringBootApplication
   @EnableSchemaRegistryClient
   public static class AvroSinkApplication {
-    ...
+    //...
   }
 ----
 
@@ -165,7 +164,7 @@ In this example, note that the mime type value is `avro/bytes`, not the default 
 @SpringBootApplication
 public static class SinkApplication {
 
-  ...
+  //...
 
   @Bean
   public MessageConverter userMessageConverter() {
@@ -182,7 +181,7 @@ Conversely, the following application registers a converter with a predefined sc
 @SpringBootApplication
 public static class SinkApplication {
 
-  ...
+  //...
 
   @Bean
   public MessageConverter userMessageConverter() {
@@ -196,17 +195,19 @@ public static class SinkApplication {
 === Schema Registry Server
 
 Spring Cloud Stream provides a schema registry server implementation.
-To use it, you can add the `spring-cloud-schema-server` artifact to your project and use the `@EnableSchemaRegistryServer` annotation, which adds the schema registry server REST controller to your application.
-This annotation is intended to be used with Spring Boot web applications, and the listening port of the server is controlled by the `server.port` property.
-The `spring.cloud.schema.server.path` property can be used to control the root path of the schema server (especially when it is embedded in other applications).
-The `spring.cloud.schema.server.allowSchemaDeletion` boolean property enables the deletion of a schema. By default, this is disabled.
+To use it, you can download latest `spring-cloud-schema-registry-server` release and run it as standalone application:
 
-The schema registry server uses a relational database to store the schemas.
-By default, it uses an embedded database.
-You can customize the schema storage by using the http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-sql[Spring Boot SQL database and JDBC configuration options].
+[source,bash]
+----
+wget https://repo.spring.io/libs-milestone/org/springframework/cloud/spring-cloud-schema-registry-server/1.0.0.RC2/spring-cloud-schema-registry-server-1.0.0.RC2.jar
+java -jar ./spring-cloud-schema-registry-server-1.0.0.RC2.jar
+----
 
+[TIP]
+====
+You can embed the schema registry in your existing Spring Boot web application.
+To do this, add the `spring-cloud-schema-server` artifact to your project and use the `@EnableSchemaRegistryServer` annotation, which adds the schema registry server REST controller to your application.
 The following example shows a Spring Boot application that enables the schema registry:
-
 [source,java]
 ----
 @SpringBootApplication
@@ -217,6 +218,15 @@ public class SchemaRegistryServerApplication {
     }
 }
 ----
+====
+
+The `spring.cloud.schema.server.path` property can be used to control the root path of the schema server (especially when it is embedded in other applications).
+The `spring.cloud.schema.server.allowSchemaDeletion` boolean property enables the deletion of a schema. By default, this is disabled.
+
+The schema registry server uses a relational database to store the schemas.
+By default, it uses an embedded database.
+You can customize the schema storage by using the http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-sql[Spring Boot SQL database and JDBC configuration options].
+
 
 ==== Schema Registry Server API
 

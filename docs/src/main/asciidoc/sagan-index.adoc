@@ -1,8 +1,11 @@
 Spring Cloud Schema Registry overview
 
 Spring Cloud Schema Registry provides support for schema evolution so that the data can be evolved over time and still work with older or newer producers and consumers and vice versa. Most serialization models, especially the ones that aim for portability across different platforms and languages, rely on a schema that describes how the data is serialized in the binary payload. In order to serialize the data and then to interpret it, both the sending and receiving sides must have access to a schema that describes the binary format. In certain cases, the schema can be inferred from the payload type on serialization or from the target type on deserialization.
+
 However, many applications benefit from having access to an explicit schema that describes the binary data format.
+
 A schema registry lets you store schema information in a textual format (typically JSON) and makes that information accessible to various applications that need it to receive and send data in binary format.
+
 A schema is referenceable as a tuple consisting of:
 
 * A subject that is the logical name of the schema
@@ -11,11 +14,11 @@ A schema is referenceable as a tuple consisting of:
 
 * The schema format, which describes the binary format of the data
 
-Spring Cloud Schema Registry provides the following compoents
+Spring Cloud Schema Registry provides the following components
 
 * Standalone Schema Registry Server
 
-  By default, it is using an H2 database, but server can be used with other databases by providing appropriate datasource configuration.
+  By default, it is using an `H2` database, but server can be used with other databases such as `Postgres` or `MySQL` by providing appropriate datasource configuration.
 
 * Schema registry clients capable of message marshalling by communicating with a Schema Registry.
 
