@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.8">
+<title>Spring Cloud Schema Registry</title>
+<link rel="stylesheet" href="css/spring.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+.hidden {
+	display: none;
+}
+
+.switch {
+	border-width: 1px 1px 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+	display: inline-block;
+}
+
+.switch--item {
+	padding: 10px;
+	background-color: #ffffff;
+	color: #7a2518;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.switch--item:not(:first-child) {
+	border-width: 0 0 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+}
+
+.switch--item.selected {
+	background-color: #7a2519;
+	color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script type="text/javascript">
+function addBlockSwitches() {
+	$('.primary').each(function() {
+		primary = $(this);
+		createSwitchItem(primary, createBlockSwitch(primary)).item.addClass("selected");
+		primary.children('.title').remove();
+	});
+	$('.secondary').each(function(idx, node) {
+		secondary = $(node);
+		primary = findPrimary(secondary);
+		switchItem = createSwitchItem(secondary, primary.children('.switch'));
+		switchItem.content.addClass('hidden');
+		findPrimary(secondary).append(switchItem.content);
+		secondary.remove();
+	});
+}
+
+function createBlockSwitch(primary) {
+	blockSwitch = $('<div class="switch"></div>');
+	primary.prepend(blockSwitch);
+	return blockSwitch;
+}
+
+function findPrimary(secondary) {
+	candidate = secondary.prev();
+	while (!candidate.is('.primary')) {
+		candidate = candidate.prev();
+	}
+	return candidate;
+}
+
+function createSwitchItem(block, blockSwitch) {
+	blockName = block.children('.title').text();
+	content = block.children('.content').first().append(block.next('.colist'));
+	item = $('<div class="switch--item">' + blockName + '</div>');
+	item.on('click', '', content, function(e) {
+		$(this).addClass('selected');
+		$(this).siblings().removeClass('selected');
+		e.data.siblings('.content').addClass('hidden');
+		e.data.removeClass('hidden');
+	});
+	blockSwitch.append(item);
+	return {'item': item, 'content': content};
+}
+
+$(addBlockSwitches);
+</script>
+
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<h1>Spring Cloud Schema Registry</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a>
+<ul class="sectlevel3">
+<li><a href="#_spring_cloud_schema_registry_overview">Spring Cloud Schema Registry overview</a></li>
+<li><a href="#_schema_registry_client">Schema Registry Client</a></li>
+<li><a href="#_avro_schema_registry_client_message_converters">Avro Schema Registry Client Message Converters</a></li>
+<li><a href="#_apache_avro_message_converters">Apache Avro Message Converters</a></li>
+<li><a href="#_converters_with_schema_support">Converters with Schema Support</a></li>
+<li><a href="#_schema_registry_server">Schema Registry Server</a></li>
+<li><a href="#_schema_registration_and_resolution">Schema Registration and Resolution</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Unascribed</p>
+</div>
+<div class="paragraph">
+<p><strong>1.0.0.BUILD-SNAPSHOT</strong></p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction"><a class="link" href="#_introduction">Introduction</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When organizations have a messaging based pub/sub architecture and multiple producer and consumer microservices communicate each other, it is often necessary for all those microservices to agree on a contract that is based on a schema.
+When such a schema needs to evolve to accommodate new business requirements, the existing components are still required to continue to work.
+This project provides support for a standalone schema registry server using which aforementioned schema can be registered and used by the applications.
+It also contains support for avro based schema registry clients, which essentially provide message converters that communicates with the schema registry for reconciling schema during message conversion.
+The schema evolution support provided by this project works both with the aforementioned standalone schema registry as well as the schema registry provided by Confluent that specifically works with Apache Kafka.</p>
+</div>
+<div class="sect3">
+<h4 id="_spring_cloud_schema_registry_overview"><a class="link" href="#_spring_cloud_schema_registry_overview">Spring Cloud Schema Registry overview</a></h4>
+<div class="paragraph">
+<p>Spring Cloud Schema Registry provides support for schema evolution so that the data can be evolved over time and still work with older or newer producers and consumers and vice versa. Most serialization models, especially the ones that aim for portability across different platforms and languages, rely on a schema that describes how the data is serialized in the binary payload. In order to serialize the data and then to interpret it, both the sending and receiving sides must have access to a schema that describes the binary format. In certain cases, the schema can be inferred from the payload type on serialization or from the target type on deserialization.
+However, many applications benefit from having access to an explicit schema that describes the binary data format.
+A schema registry lets you store schema information in a textual format (typically JSON) and makes that information accessible to various applications that need it to receive and send data in binary format.
+A schema is referenceable as a tuple consisting of:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A subject that is the logical name of the schema</p>
+</li>
+<li>
+<p>The schema version</p>
+</li>
+<li>
+<p>The schema format, which describes the binary format of the data</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Spring Cloud Schema Registry provides the following compoents</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Standalone Schema Registry Server</p>
+<div class="literalblock">
+<div class="content">
+<pre>By default, it is using an H2 database, but server can be used with other databases by providing appropriate datasource configuration.</pre>
+</div>
+</div>
+</li>
+<li>
+<p>Schema registry clients capable of message marshalling by communicating with a Schema Registry.</p>
+<div class="literalblock">
+<div class="content">
+<pre>Currently, the client can communicate to the standalone schema registry or the Confluent Schema Registry.</pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_schema_registry_client"><a class="link" href="#_schema_registry_client">Schema Registry Client</a></h3>
+<div class="paragraph">
+<p>The client-side abstraction for interacting with schema registry servers is the <code>SchemaRegistryClient</code> interface, which has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">public interface SchemaRegistryClient {
+
+    SchemaRegistrationResponse register(String subject, String format, String schema);
+
+    String fetch(SchemaReference schemaReference);
+
+    String fetch(Integer id);
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Spring Cloud Stream provides out-of-the-box implementations for interacting with its own schema server and for interacting with the Confluent Schema Registry.</p>
+</div>
+<div class="paragraph">
+<p>A client for the Spring Cloud Stream schema registry can be configured by using the <code>@EnableSchemaRegistryClient</code>, as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">  @EnableBinding(Sink.class)
+  @SpringBootApplication
+  @EnableSchemaRegistryClient
+  public static class AvroSinkApplication {
+    ...
+  }</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The default converter is optimized to cache not only the schemas from the remote server but also the <code>parse()</code> and <code>toString()</code> methods, which are quite expensive.
+Because of this, it uses a <code>DefaultSchemaRegistryClient</code> that does not cache responses.
+If you intend to change the default behavior, you can use the client directly on your code and override it to the desired outcome.
+To do so, you have to add the property <code>spring.cloud.schemaRegistryClient.cached=true</code> to your application properties.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_schema_registry_client_properties"><a class="link" href="#_schema_registry_client_properties">Schema Registry Client Properties</a></h4>
+<div class="paragraph">
+<p>The Schema Registry Client supports the following properties:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>spring.cloud.schemaRegistryClient.endpoint</code></dt>
+<dd>
+<p>The location of the schema-server.
+When setting this, use a full URL, including protocol (<code>http</code> or <code>https</code>) , port, and context path.</p>
+</dd>
+<dt class="hdlist1">Default</dt>
+<dd>
+<p><code><a href="http://localhost:8990/" class="bare">http://localhost:8990/</a></code></p>
+</dd>
+<dt class="hdlist1"><code>spring.cloud.schemaRegistryClient.cached</code></dt>
+<dd>
+<p>Whether the client should cache schema server responses.
+Normally set to <code>false</code>, as the caching happens in the message converter.
+Clients using the schema registry client should set this to <code>true</code>.</p>
+</dd>
+<dt class="hdlist1">Default</dt>
+<dd>
+<p><code>false</code></p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_avro_schema_registry_client_message_converters"><a class="link" href="#_avro_schema_registry_client_message_converters">Avro Schema Registry Client Message Converters</a></h3>
+<div class="paragraph">
+<p>For applications that have a SchemaRegistryClient bean registered with the application context, Spring Cloud Stream auto configures an Apache Avro message converter for schema management.
+This eases schema evolution, as applications that receive messages can get easy access to a writer schema that can be reconciled with their own reader schema.</p>
+</div>
+<div class="paragraph">
+<p>For outbound messages, if the content type of the channel is set to <code>application/*+avro</code>, the <code>MessageConverter</code> is activated, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">spring.cloud.stream.bindings.output.contentType=application/*+avro</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>During the outbound conversion, the message converter tries to infer the schema of each outbound messages (based on its type) and register it to a subject (based on the payload type) by using the <code>SchemaRegistryClient</code>.
+If an identical schema is already found, then a reference to it is retrieved.
+If not, the schema is registered, and a new version number is provided.
+The message is sent with a <code>contentType</code> header by using the following scheme: <code>application/[prefix].[subject].v[version]+avro</code>, where <code>prefix</code> is configurable and <code>subject</code> is deduced from the payload type.</p>
+</div>
+<div class="paragraph">
+<p>For example, a message of the type <code>User</code> might be sent as a binary payload with a content type of <code>application/vnd.user.v2+avro</code>, where <code>user</code> is the subject and <code>2</code> is the version number.</p>
+</div>
+<div class="paragraph">
+<p>When receiving messages, the converter infers the schema reference from the header of the incoming message and tries to retrieve it. The schema is used as the writer schema in the deserialization process.</p>
+</div>
+<div class="sect3">
+<h4 id="_avro_schema_registry_message_converter_properties"><a class="link" href="#_avro_schema_registry_message_converter_properties">Avro Schema Registry Message Converter Properties</a></h4>
+<div class="paragraph">
+<p>If you have enabled Avro based schema registry client by setting <code>spring.cloud.stream.bindings.output.contentType=application/*+avro</code>, you can customize the behavior of the registration by setting the following properties.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">spring.cloud.schema.avro.dynamicSchemaGenerationEnabled</dt>
+<dd>
+<p>Enable if you want the converter to use reflection to infer a Schema from a POJO.</p>
+<div class="paragraph">
+<p>Default: <code>false</code></p>
+</div>
+</dd>
+<dt class="hdlist1">spring.cloud.schema.avro.readerSchema</dt>
+<dd>
+<p>Avro compares schema versions by looking at a writer schema (origin payload) and a reader schema (your application payload). See the <a href="https://avro.apache.org/docs/1.7.6/spec.html">Avro documentation</a> for more information. If set, this overrides any lookups at the schema server and uses the local schema as the reader schema.
+Default: <code>null</code></p>
+</dd>
+<dt class="hdlist1">spring.cloud.schema.avro.schemaLocations</dt>
+<dd>
+<p>Registers any <code>.avsc</code> files listed in this property with the Schema Server.</p>
+<div class="paragraph">
+<p>Default: <code>empty</code></p>
+</div>
+</dd>
+<dt class="hdlist1">spring.cloud.schema.avro.prefix</dt>
+<dd>
+<p>The prefix to be used on the Content-Type header.</p>
+<div class="paragraph">
+<p>Default: <code>vnd</code></p>
+</div>
+</dd>
+<dt class="hdlist1">spring.cloud.schema.avro.subjectNamingStrategy</dt>
+<dd>
+<p>Determines the subject name used to register the Avro schema in the schema registry. Two implementations are available, <code>org.springframework.cloud.stream.schema.avro.DefaultSubjectNamingStrategy</code>,
+where the subject is the schema name, and <code>org.springframework.cloud.stream.schema.avro.QualifiedSubjectNamingStrategy</code>, which returns a fully qualified subject using the Avro schema namespace and name. Custom strategies can be created by implementing <code>org.springframework.cloud.stream.schema.avro.SubjectNamingStrategy</code>.</p>
+<div class="paragraph">
+<p>Default: <code>org.springframework.cloud.stream.schema.avro.DefaultSubjectNamingStrategy</code></p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_apache_avro_message_converters"><a class="link" href="#_apache_avro_message_converters">Apache Avro Message Converters</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Stream provides support for schema-based message converters through its <code>spring-cloud-stream-schema</code> module.
+Currently, the only serialization format supported out of the box for schema-based message converters is Apache Avro, with more formats to be added in future versions.</p>
+</div>
+<div class="paragraph">
+<p>The <code>spring-cloud-stream-schema</code> module contains two types of message converters that can be used for Apache Avro serialization:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Converters that use the class information of the serialized or deserialized objects or a schema with a location known at startup.</p>
+</li>
+<li>
+<p>Converters that use a schema registry. They locate the schemas at runtime and dynamically register new schemas as domain objects evolve.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_converters_with_schema_support"><a class="link" href="#_converters_with_schema_support">Converters with Schema Support</a></h3>
+<div class="paragraph">
+<p>The <code>AvroSchemaMessageConverter</code> supports serializing and deserializing messages either by using a predefined schema or by using the schema information available in the class (either reflectively or contained in the <code>SpecificRecord</code>).
+If you provide a custom converter, then the default AvroSchemaMessageConverter bean is not created. The following example shows a custom converter:</p>
+</div>
+<div class="paragraph">
+<p>To use custom converters, you can simply add it to the application context, optionally specifying one or more <code>MimeTypes</code> with which to associate it.
+The default <code>MimeType</code> is <code>application/avro</code>.</p>
+</div>
+<div class="paragraph">
+<p>If the target type of the conversion is a <code>GenericRecord</code>, a schema must be set.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to configure a converter in a sink application by registering the Apache Avro <code>MessageConverter</code> without a predefined schema.
+In this example, note that the mime type value is <code>avro/bytes</code>, not the default <code>application/avro</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@EnableBinding(Sink.class)
+@SpringBootApplication
+public static class SinkApplication {
+
+  ...
+
+  @Bean
+  public MessageConverter userMessageConverter() {
+      return new AvroSchemaMessageConverter(MimeType.valueOf("avro/bytes"));
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Conversely, the following application registers a converter with a predefined schema (found on the classpath):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@EnableBinding(Sink.class)
+@SpringBootApplication
+public static class SinkApplication {
+
+  ...
+
+  @Bean
+  public MessageConverter userMessageConverter() {
+      AvroSchemaMessageConverter converter = new AvroSchemaMessageConverter(MimeType.valueOf("avro/bytes"));
+      converter.setSchemaLocation(new ClassPathResource("schemas/User.avro"));
+      return converter;
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_schema_registry_server"><a class="link" href="#_schema_registry_server">Schema Registry Server</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Stream provides a schema registry server implementation.
+To use it, you can add the <code>spring-cloud-schema-server</code> artifact to your project and use the <code>@EnableSchemaRegistryServer</code> annotation, which adds the schema registry server REST controller to your application.
+This annotation is intended to be used with Spring Boot web applications, and the listening port of the server is controlled by the <code>server.port</code> property.
+The <code>spring.cloud.schema.server.path</code> property can be used to control the root path of the schema server (especially when it is embedded in other applications).
+The <code>spring.cloud.schema.server.allowSchemaDeletion</code> boolean property enables the deletion of a schema. By default, this is disabled.</p>
+</div>
+<div class="paragraph">
+<p>The schema registry server uses a relational database to store the schemas.
+By default, it uses an embedded database.
+You can customize the schema storage by using the <a href="http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-sql">Spring Boot SQL database and JDBC configuration options</a>.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows a Spring Boot application that enables the schema registry:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@SpringBootApplication
+@EnableSchemaRegistryServer
+public class SchemaRegistryServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(SchemaRegistryServerApplication.class, args);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_schema_registry_server_api"><a class="link" href="#_schema_registry_server_api">Schema Registry Server API</a></h4>
+<div class="paragraph">
+<p>The Schema Registry Server API consists of the following operations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>POST /</code>&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-registering-new-schema">Registering a New Schema</a></code></p>
+</li>
+<li>
+<p>'GET /{subject}/{format}/{version}'&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-retrieve-schema-subject-format-version">Retrieving an Existing Schema by Subject, Format, and Version</a></code></p>
+</li>
+<li>
+<p><code>GET /{subject}/{format}</code>&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-retrieve-schema-subject-format">Retrieving an Existing Schema by Subject and Format</a></code></p>
+</li>
+<li>
+<p><code>GET /schemas/{id}</code>&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-retrieve-schema-id">Retrieving an Existing Schema by ID</a></code></p>
+</li>
+<li>
+<p><code>DELETE /{subject}/{format}/{version}</code>&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-deleting-schema-subject-format-version">Deleting a Schema by Subject, Format, and Version</a></code></p>
+</li>
+<li>
+<p><code>DELETE /schemas/{id}</code>&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-deleting-schema-id">Deleting a Schema by ID</a></code></p>
+</li>
+<li>
+<p><code>DELETE /{subject}</code>&#8201;&#8212;&#8201;see <code><a href="#spring-cloud-stream-overview-deleting-schema-subject">Deleting a Schema by Subject</a></code></p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-registering-new-schema"><a class="link" href="#spring-cloud-stream-overview-registering-new-schema">Registering a New Schema</a></h5>
+<div class="paragraph">
+<p>To register a new schema, send a <code>POST</code> request to the <code>/</code> endpoint.</p>
+</div>
+<div class="paragraph">
+<p>The <code>/</code> accepts a JSON payload  with the following fields:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>subject</code>: The schema subject</p>
+</li>
+<li>
+<p><code>format</code>: The schema format</p>
+</li>
+<li>
+<p><code>definition</code>: The schema definition</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Its response is a schema object in JSON, with the following fields:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>id</code>: The schema ID</p>
+</li>
+<li>
+<p><code>subject</code>: The schema subject</p>
+</li>
+<li>
+<p><code>format</code>: The schema format</p>
+</li>
+<li>
+<p><code>version</code>: The schema version</p>
+</li>
+<li>
+<p><code>definition</code>: The schema definition</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-retrieve-schema-subject-format-version"><a class="link" href="#spring-cloud-stream-overview-retrieve-schema-subject-format-version">Retrieving an Existing Schema by Subject, Format, and Version</a></h5>
+<div class="paragraph">
+<p>To retrieve an existing schema by subject, format, and version, send <code>GET</code> request to the <code>/{subject}/{format}/{version}</code> endpoint.</p>
+</div>
+<div class="paragraph">
+<p>Its response is a schema object in JSON, with the following fields:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>id</code>: The schema ID</p>
+</li>
+<li>
+<p><code>subject</code>: The schema subject</p>
+</li>
+<li>
+<p><code>format</code>: The schema format</p>
+</li>
+<li>
+<p><code>version</code>: The schema version</p>
+</li>
+<li>
+<p><code>definition</code>: The schema definition</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-retrieve-schema-subject-format"><a class="link" href="#spring-cloud-stream-overview-retrieve-schema-subject-format">Retrieving an Existing Schema by Subject and Format</a></h5>
+<div class="paragraph">
+<p>To retrieve an existing schema by subject and format, send a <code>GET</code> request to the <code>/subject/format</code> endpoint.</p>
+</div>
+<div class="paragraph">
+<p>Its response is a list of schemas with each schema object in JSON, with the following fields:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>id</code>: The schema ID</p>
+</li>
+<li>
+<p><code>subject</code>: The schema subject</p>
+</li>
+<li>
+<p><code>format</code>: The schema format</p>
+</li>
+<li>
+<p><code>version</code>: The schema version</p>
+</li>
+<li>
+<p><code>definition</code>: The schema definition</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-retrieve-schema-id"><a class="link" href="#spring-cloud-stream-overview-retrieve-schema-id">Retrieving an Existing Schema by ID</a></h5>
+<div class="paragraph">
+<p>To retrieve a schema by its ID, send a <code>GET</code> request to the <code>/schemas/{id}</code> endpoint.</p>
+</div>
+<div class="paragraph">
+<p>Its response is a schema object in JSON, with the following fields:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>id</code>: The schema ID</p>
+</li>
+<li>
+<p><code>subject</code>: The schema subject</p>
+</li>
+<li>
+<p><code>format</code>: The schema format</p>
+</li>
+<li>
+<p><code>version</code>: The schema version</p>
+</li>
+<li>
+<p><code>definition</code>: The schema definition</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-deleting-schema-subject-format-version"><a class="link" href="#spring-cloud-stream-overview-deleting-schema-subject-format-version">Deleting a Schema by Subject, Format, and Version</a></h5>
+<div class="paragraph">
+<p>To delete a schema identified by its subject, format, and version, send a <code>DELETE</code> request to the <code>/{subject}/{format}/{version}</code> endpoint.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-deleting-schema-id"><a class="link" href="#spring-cloud-stream-overview-deleting-schema-id">Deleting a Schema by ID</a></h5>
+<div class="paragraph">
+<p>To delete a schema by its ID, send a <code>DELETE</code> request to the <code>/schemas/{id}</code> endpoint.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="spring-cloud-stream-overview-deleting-schema-subject"><a class="link" href="#spring-cloud-stream-overview-deleting-schema-subject">Deleting a Schema by Subject</a></h5>
+<div class="paragraph">
+<p><code>DELETE /{subject}</code></p>
+</div>
+<div class="paragraph">
+<p>Delete existing schemas by their subject.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This note applies to users of Spring Cloud Stream 1.1.0.RELEASE only.
+Spring Cloud Stream 1.1.0.RELEASE used the table name, <code>schema</code>, for storing <code>Schema</code> objects. <code>Schema</code> is a keyword in a number of database implementations.
+To avoid any conflicts in the future, starting with 1.1.1.RELEASE, we have opted for the name <code>SCHEMA_REPOSITORY</code> for the storage table.
+Any Spring Cloud Stream 1.1.0.RELEASE users who upgrade should migrate their existing schemas to the new table before upgrading.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_using_confluents_schema_registry"><a class="link" href="#_using_confluents_schema_registry">Using Confluent&#8217;s Schema Registry</a></h4>
+<div class="paragraph">
+<p>The default configuration creates a <code>DefaultSchemaRegistryClient</code> bean.
+If you want to use the Confluent schema registry, you need to create a bean of type <code>ConfluentSchemaRegistryClient</code>, which supersedes the one configured by default by the framework. The following example shows how to create such a bean:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Bean
+public SchemaRegistryClient schemaRegistryClient(@Value("${spring.cloud.schemaRegistryClient.endpoint}") String endpoint){
+  ConfluentSchemaRegistryClient client = new ConfluentSchemaRegistryClient();
+  client.setEndpoint(endpoint);
+  return client;
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The ConfluentSchemaRegistryClient is tested against Confluent platform version 4.0.0.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_schema_registration_and_resolution"><a class="link" href="#_schema_registration_and_resolution">Schema Registration and Resolution</a></h3>
+<div class="paragraph">
+<p>To better understand how Spring Cloud Stream registers and resolves new schemas and its use of Avro schema comparison features, we provide two separate subsections:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code><a href="#spring-cloud-stream-overview-schema-registration-process">Schema Registration Process (Serialization)</a></code></p>
+</li>
+<li>
+<p><code><a href="#spring-cloud-stream-overview-schema-resolution-process">Schema Resolution Process (Deserialization)</a></code></p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="spring-cloud-stream-overview-schema-registration-process"><a class="link" href="#spring-cloud-stream-overview-schema-registration-process">Schema Registration Process (Serialization)</a></h4>
+<div class="paragraph">
+<p>The first part of the registration process is extracting a schema from the payload that is being sent over a channel.
+Avro types such as <code>SpecificRecord</code> or <code>GenericRecord</code> already contain a schema, which can be retrieved immediately from the instance.
+In the case of POJOs, a schema is inferred if the <code>spring.cloud.schema.avro.dynamicSchemaGenerationEnabled</code> property is set to <code>true</code> (the default).</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-function/master/docs/src/main/asciidoc/images/schema_resolution.png" alt="schema resolution" width="800">
+</div>
+<div class="title">Figure 1. Schema Writer Resolution Process</div>
+</div>
+<div class="paragraph">
+<p>Ones a schema is obtained, the converter loads its metadata (version) from the remote server.
+First, it queries a local cache. If no result is found, it submits the data to the server, which replies with versioning information.
+The converter always caches the results to avoid the overhead of querying the Schema Server for every new message that needs to be serialized.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-function/master/docs/src/main/asciidoc/images/registration.png" alt="registration" width="800">
+</div>
+<div class="title">Figure 2. Schema Registration Process</div>
+</div>
+<div class="paragraph">
+<p>With the schema version information, the converter sets the <code>contentType</code> header of the message to carry the version information&#8201;&#8212;&#8201;for example: <code>application/vnd.user.v1+avro</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="spring-cloud-stream-overview-schema-resolution-process"><a class="link" href="#spring-cloud-stream-overview-schema-resolution-process">Schema Resolution Process (Deserialization)</a></h4>
+<div class="paragraph">
+<p>When reading messages that contain version information (that is, a <code>contentType</code> header with a scheme like the one described under <code><a href="#spring-cloud-stream-overview-schema-registration-process">Schema Registration Process (Serialization)</a></code>, the converter queries the Schema server to fetch the writer schema of the message.
+Once it has found the correct schema of the incoming message, it retrieves the reader schema and, by using Avro&#8217;s schema resolution support, reads it into the reader definition (setting defaults and any missing properties).</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-function/master/docs/src/main/asciidoc/images/schema_reading.png" alt="schema reading" width="800">
+</div>
+<div class="title">Figure 3. Schema Reading Resolution Process</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You should understand the difference between a writer schema (the application that wrote the message) and a reader schema (the receiving application).
+We suggest taking a moment to read <a href="https://avro.apache.org/docs/1.7.6/spec.html">the Avro terminology</a> and understand the process.
+Spring Cloud Stream always fetches the writer schema to determine how to read a message.
+If you want to get Avro&#8217;s schema evolution support working, you need to make sure that a <code>readerSchema</code> was properly set for your application.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript" src="js/tocbot/tocbot.min.js"></script>
+<script type="text/javascript" src="js/toc.js"></script>
+<link rel="stylesheet" href="js/highlight/styles/atom-one-dark-reasonable.min.css">
+<script src="js/highlight/highlight.min.js"></script>
+<script>hljs.initHighlighting()</script>
+</body>
+</html>
