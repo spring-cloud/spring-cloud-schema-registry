@@ -6,7 +6,7 @@
     <artifactId>spring-cloud-schema-registry-core</artifactId>
 
     <parent>
-        <artifactId>spring-cloud-scheam-registry-parent</artifactId>
+        <artifactId>spring-cloud-schema-registry-parent</artifactId>
         <groupId>org.springframework.cloud</groupId>
         <version>1.0.2.BUILD-SNAPSHOT</version>
     </parent>
