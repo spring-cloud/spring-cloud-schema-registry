@@ -238,9 +238,9 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 
 		Stream.of(this.schemaImports, this.schemaLocations)
 				.filter(arr -> !ObjectUtils.isEmpty(arr)).distinct().peek(resources -> {
-					this.logger.info("Scanning avro schema resources on classpath");
 					if (this.logger.isInfoEnabled()) {
-						this.logger.info("Parsing" + this.schemaImports.length);
+						this.logger.info("Scanning avro schema resources on classpath");
+						this.logger.info("Parsing " + this.schemaImports.length + " schemas");
 					}
 				}).flatMap(Arrays::stream).forEach(resource -> {
 					try {
