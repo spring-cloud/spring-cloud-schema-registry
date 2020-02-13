@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.cloud.schema.registry.model.Schema;
 
 /**
  * @author Vinicius Carvalho
+ * @author Christian Tzolov
  *
  * Provides utility methods to validate, check compatibility and match schemas of
  * different implementations
@@ -35,6 +36,17 @@ public interface SchemaValidator {
 	 * @return true if valid, false otherwise
 	 */
 	boolean isValid(String definition);
+
+	/**
+	 * Validates a schema definition and throws an {@link InvalidSchemaException} when the schema is invalid.
+	 * The exception is expected to have the violation description.
+	 * @param definition - The textual representation of the schema file
+	 */
+	default void validate(String definition) {
+		if (!this.isValid(definition)) {
+			throw new InvalidSchemaException("Invalid Schema");
+		}
+	}
 
 	/**
 	 * Checks for compatibility between two schemas @see Compatibility class for types
