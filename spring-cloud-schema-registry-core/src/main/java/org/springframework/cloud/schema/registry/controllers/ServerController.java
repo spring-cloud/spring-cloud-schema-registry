@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -63,8 +64,8 @@ public class ServerController {
 	private final SchemaServerProperties schemaServerProperties;
 
 	public ServerController(SchemaRepository repository,
-							Map<String, SchemaValidator> validators,
-							SchemaServerProperties schemaServerProperties) {
+			Map<String, SchemaValidator> validators,
+			SchemaServerProperties schemaServerProperties) {
 		Assert.notNull(repository, "cannot be null");
 		Assert.notEmpty(validators, "cannot be empty");
 		this.repository = repository;
@@ -73,8 +74,8 @@ public class ServerController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, path = "/", consumes = "application/json", produces = "application/json")
-	public synchronized ResponseEntity<Schema> register(@RequestBody Schema schema,
-														UriComponentsBuilder builder) {
+	public synchronized ResponseEntity<Schema> register(@RequestBody Schema schema, UriComponentsBuilder builder) {
+
 		SchemaValidator validator = this.validators.get(schema.getFormat());
 
 		if (validator == null) {
@@ -83,9 +84,7 @@ public class ServerController {
 							.collectionToCommaDelimitedString(this.validators.keySet())));
 		}
 
-		if (!validator.isValid(schema.getDefinition())) {
-			throw new InvalidSchemaException("Invalid schema");
-		}
+		validator.validate(schema.getDefinition());
 
 		Schema result;
 		List<Schema> registeredEntities = this.repository
@@ -121,12 +120,13 @@ public class ServerController {
 
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/{subject}/{format}/v{version}")
 	public ResponseEntity<Schema> findOne(@PathVariable("subject") String subject,
-										@PathVariable("format") String format,
-										@PathVariable("version") Integer version) {
-		Schema schema = this.repository.findOneBySubjectAndFormatAndVersion(subject,
-				format, version);
+			@PathVariable("format") String format,
+			@PathVariable("version") Integer version) {
+		Schema schema = this.repository.findOneBySubjectAndFormatAndVersion(subject, format, version);
 		if (schema == null) {
-			throw new SchemaNotFoundException("Could not find Schema");
+			throw new SchemaNotFoundException(
+					String.format("Could not find Schema by subject: %s, format: %s, version %s",
+							subject, format, version));
 		}
 		return new ResponseEntity<>(schema, HttpStatus.OK);
 	}
@@ -135,7 +135,7 @@ public class ServerController {
 	public ResponseEntity<Schema> findOne(@PathVariable("id") Integer id) {
 		Optional<Schema> schema = this.repository.findById(id);
 		if (!schema.isPresent()) {
-			throw new SchemaNotFoundException("Could not find Schema");
+			throw new SchemaNotFoundException(String.format("Could not find Schema by id: %s", id));
 		}
 		return new ResponseEntity<>(schema.get(), HttpStatus.OK);
 	}
@@ -157,7 +157,7 @@ public class ServerController {
 	 */
 	@Deprecated
 	public ResponseEntity<List<Schema>> findBySubjectAndVersion(@PathVariable("subject") String subject,
-																@PathVariable("format") String format) {
+			@PathVariable("format") String format) {
 		return findBySubjectAndFormatOrderByVersionAsc(subject, format);
 	}
 
@@ -177,21 +177,26 @@ public class ServerController {
 	@GetMapping(produces = APPLICATION_JSON_VALUE, path = "/{subject}/{format}")
 	@NonNull
 	public ResponseEntity<List<Schema>> findBySubjectAndFormat(@NonNull @PathVariable("subject") final String subject,
-															@NonNull @PathVariable("format") final String format) {
+			@NonNull @PathVariable("format") final String format) {
 		return findBySubjectAndFormatOrderByVersionAsc(subject, format);
 	}
 
 	@RequestMapping(value = "/{subject}/{format}/v{version}", method = RequestMethod.DELETE)
 	public void delete(@PathVariable("subject") String subject,
-					@PathVariable("format") String format,
-					@PathVariable("version") Integer version) {
+			@PathVariable("format") String format,
+			@PathVariable("version") Integer version) {
 		if (this.schemaServerProperties.isAllowSchemaDeletion()) {
-			Schema schema = this.repository.findOneBySubjectAndFormatAndVersion(subject,
-					format, version);
+			Schema schema = this.repository.findOneBySubjectAndFormatAndVersion(subject, format, version);
+			if (schema == null) {
+				throw new SchemaNotFoundException(
+						String.format("Could not find Schema by subject: %s, format: %s, version %s",
+								subject, format, version));
+			}
 			deleteSchema(schema);
 		}
 		else {
-			throw new SchemaDeletionNotAllowedException();
+			throw new SchemaDeletionNotAllowedException(String.format("Not permitted deletion of Schema by " +
+					"subject: %s, format: %s, version %s", subject, format, version));
 		}
 	}
 
@@ -200,12 +205,12 @@ public class ServerController {
 		if (this.schemaServerProperties.isAllowSchemaDeletion()) {
 			Optional<Schema> schema = this.repository.findById(id);
 			if (!schema.isPresent()) {
-				throw new SchemaNotFoundException("Could not find Schema");
+				throw new SchemaNotFoundException(String.format("Could not find Schema by id: %s", id));
 			}
 			deleteSchema(schema.get());
 		}
 		else {
-			throw new SchemaDeletionNotAllowedException();
+			throw new SchemaDeletionNotAllowedException(String.format("Not permitted deletion of Schema by id: %s", id));
 		}
 	}
 
@@ -219,14 +224,15 @@ public class ServerController {
 			}
 		}
 		else {
-			throw new SchemaDeletionNotAllowedException();
+			throw new SchemaDeletionNotAllowedException(String.format("Not permitted deletion of Schema by " +
+					"subject: %s", subject));
 		}
 
 	}
 
 	@NonNull
 	public final ResponseEntity<List<Schema>> findBySubjectAndFormatOrderByVersionAsc(@NonNull final String subject,
-																			@NonNull final String format) {
+			@NonNull final String format) {
 		List<Schema> schemas = this.repository.findBySubjectAndFormatOrderByVersion(subject, format);
 		if (schemas.isEmpty()) {
 			throw new SchemaNotFoundException(
@@ -243,23 +249,34 @@ public class ServerController {
 	}
 
 	@ExceptionHandler(UnsupportedFormatException.class)
-	@ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Format not supported")
-	public void unsupportedFormat(UnsupportedFormatException ex) {
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	public String onUnsupportedFormat(UnsupportedFormatException e) {
+		return errorMessage("Format not supported", e);
 	}
 
 	@ExceptionHandler(InvalidSchemaException.class)
-	@ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Invalid schema")
-	public void invalidSchema(InvalidSchemaException ex) {
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	public String onInvalidSchema(InvalidSchemaException e) {
+		return errorMessage("Invalid Schema", e);
 	}
 
 	@ExceptionHandler(SchemaNotFoundException.class)
-	@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Schema not found")
-	public void schemaNotFound(SchemaNotFoundException ex) {
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	@ResponseBody
+	public String schemaNotFound(SchemaNotFoundException ex) {
+		return errorMessage("Schema not found", ex);
 	}
 
 	@ExceptionHandler(SchemaDeletionNotAllowedException.class)
-	@ResponseStatus(value = HttpStatus.METHOD_NOT_ALLOWED, reason = "Schema deletion is not permitted")
-	public void schemaDeletionNotPermitted(SchemaDeletionNotAllowedException ex) {
+	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+	@ResponseBody
+	public String schemaDeletionNotPermitted(SchemaDeletionNotAllowedException ex) {
+		return errorMessage("Schema deletion is not permitted", ex);
 	}
 
+	private String errorMessage(String prefix, Throwable e) {
+		return prefix + (StringUtils.hasText(e.getMessage()) ? ": " + e.getMessage() : "");
+	}
 }

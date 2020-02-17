@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,14 @@ import org.springframework.cloud.schema.registry.model.Schema;
 
 /**
  * @author Vinicius Carvalho
+ * @author Christian Tzolov
  */
 public class AvroSchemaValidator implements SchemaValidator {
+
+	/**
+	 * Unique Avro schema format identifier.
+	 */
+	public static final String AVRO_FORMAT = "avro";
 
 	@Override
 	public boolean isValid(String definition) {
@@ -41,6 +47,16 @@ public class AvroSchemaValidator implements SchemaValidator {
 	}
 
 	@Override
+	public void validate(String definition) {
+		try {
+			new org.apache.avro.Schema.Parser().parse(definition);
+		}
+		catch (SchemaParseException ex) {
+			throw new InvalidSchemaException((ex.getMessage()));
+		}
+	}
+
+	@Override
 	public Compatibility compatibilityCheck(String source, String other) {
 		return null;
 	}
@@ -48,11 +64,9 @@ public class AvroSchemaValidator implements SchemaValidator {
 	@Override
 	public Schema match(List<Schema> schemas, String definition) {
 		Schema result = null;
-		org.apache.avro.Schema source = new org.apache.avro.Schema.Parser()
-				.parse(definition);
+		org.apache.avro.Schema source = new org.apache.avro.Schema.Parser().parse(definition);
 		for (Schema s : schemas) {
-			org.apache.avro.Schema target = new org.apache.avro.Schema.Parser()
-					.parse(s.getDefinition());
+			org.apache.avro.Schema target = new org.apache.avro.Schema.Parser().parse(s.getDefinition());
 			if (target.equals(source)) {
 				result = s;
 				break;
@@ -63,7 +77,7 @@ public class AvroSchemaValidator implements SchemaValidator {
 
 	@Override
 	public String getFormat() {
-		return "avro";
+		return AVRO_FORMAT;
 	}
 
 }
