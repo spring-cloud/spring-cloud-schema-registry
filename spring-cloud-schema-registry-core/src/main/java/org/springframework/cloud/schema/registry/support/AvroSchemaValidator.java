@@ -18,6 +18,7 @@ package org.springframework.cloud.schema.registry.support;
 
 import java.util.List;
 
+import org.apache.avro.Schema.Parser;
 import org.apache.avro.SchemaParseException;
 
 import org.springframework.cloud.schema.registry.model.Compatibility;
@@ -35,10 +36,16 @@ public class AvroSchemaValidator implements SchemaValidator {
 	public static final String AVRO_FORMAT = "avro";
 
 	@Override
-	public boolean isValid(String definition) {
+	public boolean isValid(String definition, List<Schema> schemaReferences) {
 		boolean result = true;
 		try {
-			new org.apache.avro.Schema.Parser().parse(definition);
+			Parser avroParser = new Parser();
+			if (schemaReferences != null) {
+				for (Schema schemaReference : schemaReferences) {
+					avroParser.parse(schemaReference.getDefinition());
+				}
+			}
+			avroParser.parse(definition);
 		}
 		catch (SchemaParseException ex) {
 			result = false;
@@ -47,9 +54,15 @@ public class AvroSchemaValidator implements SchemaValidator {
 	}
 
 	@Override
-	public void validate(String definition) {
+	public void validate(String definition, List<Schema> schemaReferences) {
 		try {
-			new org.apache.avro.Schema.Parser().parse(definition);
+			Parser avroParser = new Parser();
+			if (schemaReferences != null) {
+				for (Schema schemaReference : schemaReferences) {
+					avroParser.parse(schemaReference.getDefinition());
+				}
+			}
+			avroParser.parse(definition);
 		}
 		catch (SchemaParseException ex) {
 			throw new InvalidSchemaException((ex.getMessage()));

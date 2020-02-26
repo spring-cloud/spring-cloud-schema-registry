@@ -35,15 +35,15 @@ public interface SchemaValidator {
 	 * @param definition - The textual representation of the schema file
 	 * @return true if valid, false otherwise
 	 */
-	boolean isValid(String definition);
+	boolean isValid(String definition, List<Schema> schemaReferences);
 
 	/**
 	 * Validates a schema definition and throws an {@link InvalidSchemaException} when the schema is invalid.
 	 * The exception is expected to have the violation description.
 	 * @param definition - The textual representation of the schema file
 	 */
-	default void validate(String definition) {
-		if (!this.isValid(definition)) {
+	default void validate(String definition, List<Schema> schemaReferences) {
+		if (!this.isValid(definition, schemaReferences)) {
 			throw new InvalidSchemaException("Invalid Schema");
 		}
 	}
