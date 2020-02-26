@@ -21,12 +21,15 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import javax.validation.constraints.Null;
 
 import org.apache.avro.Schema.Parser;
 import org.junit.Before;
@@ -44,6 +47,7 @@ import org.springframework.cloud.schema.registry.model.Schema;
 import org.springframework.cloud.schema.registry.support.SchemaNotFoundException;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -84,13 +88,15 @@ public class SchemaRegistryServerAvroTests {
 	private static final org.apache.avro.Schema AVRO_USER_AVRO_SCHEMA_V2 = new Parser()
 			.parse(resourceToString("classpath:/avro_user_definition_schema_v2.json"));
 
-	private static final String AVRO_USER_SCHEMA_DEFAULT_NAME_STRATEGY_SUBJECT = AVRO_USER_AVRO_SCHEMA_V1.getName()
+	private static final String AVRO_USER_SCHEMA_DEFAULT_NAME_STRATEGY_SUBJECT = AVRO_USER_AVRO_SCHEMA_V1
+			.getName()
 			.toLowerCase();
-
 
 	private static final String AVRO_USER_SCHEMA_QUALIFED_NAME_STRATEGY_SUBJECT = AVRO_USER_AVRO_SCHEMA_V1
 			.getFullName()
 			.toLowerCase();
+
+	private static final String AVRO_REFERENCE_SCHEMA_QUALIFIED_NAME_STRATEGY_SUBJECT = "reference";
 
 	private static final Schema AVRO_USER_REGISTRY_SCHEMA_V1 = toSchema(
 			AVRO_USER_SCHEMA_DEFAULT_NAME_STRATEGY_SUBJECT,
@@ -99,6 +105,11 @@ public class SchemaRegistryServerAvroTests {
 	private static final Schema AVRO_USER_REGISTRY_SCHEMA_V2 = toSchema(
 			AVRO_USER_SCHEMA_DEFAULT_NAME_STRATEGY_SUBJECT,
 			AVRO_FORMAT_NAME, AVRO_USER_AVRO_SCHEMA_V2.toString());
+
+	// Does not use Parser because otherwise will unwrap user reference
+	private static final Schema AVRO_REFERENCE_REGISTRY_SCHEMA = toSchema(
+			AVRO_REFERENCE_SCHEMA_QUALIFIED_NAME_STRATEGY_SUBJECT,
+			AVRO_FORMAT_NAME, resourceToString("classpath:/avro_reference_definition_schema.json"));
 
 	private static final Schema AAVRO_USER_REGISTRY_SCHEMA_V1_WITH_QUAL_SUBJECT = toSchema(
 			AVRO_USER_SCHEMA_QUALIFED_NAME_STRATEGY_SUBJECT,
@@ -232,6 +243,23 @@ public class SchemaRegistryServerAvroTests {
 	@Test
 	public void testUserSchemaV2() {
 		registerSchemasAndAssertSuccess(AVRO_USER_REGISTRY_SCHEMA_V1, AVRO_USER_REGISTRY_SCHEMA_V2);
+	}
+
+	@Test
+	public void testReferenceSchemaWithoutVersion() {
+		registerSchemaAndAssertSuccess(AVRO_USER_REGISTRY_SCHEMA_V1, 1, 1);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Schema-Reference", AVRO_USER_REGISTRY_SCHEMA_V1.getSubject());
+		registerSchemaAndAssertSuccess(AVRO_REFERENCE_REGISTRY_SCHEMA, 1, 2, headers);
+	}
+
+	@Test
+	public void testReferenceSchemaWithVersion() {
+		registerSchemasAndAssertSuccess(AVRO_USER_REGISTRY_SCHEMA_V1, AVRO_USER_REGISTRY_SCHEMA_V2);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Schema-Reference",
+				String.format("%s+v%d", AVRO_USER_REGISTRY_SCHEMA_V2.getSubject(), 2));
+		registerSchemaAndAssertSuccess(AVRO_REFERENCE_REGISTRY_SCHEMA, 1, 3, headers);
 	}
 
 	@Test
@@ -557,9 +585,19 @@ public class SchemaRegistryServerAvroTests {
 	private ResponseEntity<Schema> registerSchemaAndAssertSuccess(@NonNull Schema schema,
 			@Nullable Integer expectedVersion,
 			@Nullable Integer expectedId) {
+		return registerSchemaAndAssertSuccess(schema, expectedVersion, expectedId, new HttpHeaders());
+	}
+
+	@NonNull
+	private ResponseEntity<Schema> registerSchemaAndAssertSuccess(@NonNull Schema schema,
+			@Nullable Integer expectedVersion,
+			@Nullable Integer expectedId,
+			@Nullable HttpHeaders requestHeaders) {
+
+		HttpEntity<Schema> httpEntity = new HttpEntity<>(schema, requestHeaders);
 
 		ResponseEntity<Schema> registerReponse = this.client
-				.postForEntity(this.serverControllerUri, schema, Schema.class);
+				.postForEntity(this.serverControllerUri, httpEntity, Schema.class);
 
 		HttpStatus statusCode = registerReponse.getStatusCode();
 		assertThat(statusCode.is2xxSuccessful()).isTrue();
