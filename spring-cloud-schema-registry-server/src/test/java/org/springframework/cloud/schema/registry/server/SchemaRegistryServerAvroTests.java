@@ -260,6 +260,19 @@ public class SchemaRegistryServerAvroTests {
 	}
 
 	@Test
+	public void testUndefinedSchemaReference() {
+		try {
+			this.client.postForEntity(this.serverControllerUri, AVRO_REFERENCE_REGISTRY_SCHEMA, Schema.class);
+			fail("Expects: " + HttpStatus.BAD_REQUEST + " error");
+		}
+		catch (HttpClientErrorException.BadRequest badRequest) {
+			assertThat(badRequest.getMessage())
+					.isEqualTo("400 : [Invalid Schema: \"example.avro.User\" is not a defined name. The type of the \"user\" field must be a defined name or a {\"type\": ...} expression.]");
+		}
+
+	}
+
+	@Test
 	public void testIdempotentRegistration() {
 
 		registerSchemaAndAssertSuccess(AVRO_USER_REGISTRY_SCHEMA_V1, 1, 1);
