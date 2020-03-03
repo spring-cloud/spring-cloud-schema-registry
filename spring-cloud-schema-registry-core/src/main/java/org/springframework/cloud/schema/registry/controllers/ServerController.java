@@ -107,7 +107,7 @@ public class ServerController {
 			result = this.repository.save(schema);
 		}
 		else {
-			result = validator.match(registeredEntities, schema.getDefinition());
+			result = validator.match(registeredEntities, schema.getDefinition(), schemaReferences);
 			if (result == null) {
 				schema.setVersion(
 						registeredEntities.get(registeredEntities.size() - 1).getVersion()
