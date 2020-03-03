@@ -75,11 +75,23 @@ public class AvroSchemaValidator implements SchemaValidator {
 	}
 
 	@Override
-	public Schema match(List<Schema> schemas, String definition) {
+	public Schema match(List<Schema> schemas, String definition, List<Schema> schemaReferences) {
 		Schema result = null;
-		org.apache.avro.Schema source = new org.apache.avro.Schema.Parser().parse(definition);
+		Parser avroParser = new Parser();
+		if (schemaReferences != null) {
+			for (Schema schemaReference : schemaReferences) {
+				avroParser.parse(schemaReference.getDefinition());
+			}
+		}
+		org.apache.avro.Schema source = avroParser.parse(definition);
 		for (Schema s : schemas) {
-			org.apache.avro.Schema target = new org.apache.avro.Schema.Parser().parse(s.getDefinition());
+			avroParser = new Parser();
+			if (schemaReferences != null) {
+				for (Schema schemaReference : schemaReferences) {
+					avroParser.parse(schemaReference.getDefinition());
+				}
+			}
+			org.apache.avro.Schema target = avroParser.parse(s.getDefinition());
 			if (target.equals(source)) {
 				result = s;
 				break;

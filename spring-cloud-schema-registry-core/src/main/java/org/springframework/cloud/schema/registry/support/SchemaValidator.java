@@ -65,7 +65,7 @@ public interface SchemaValidator {
 	 * @param definition Textual representation of the schema
 	 * @return A full Schema object with identifier and subject properties
 	 */
-	Schema match(List<Schema> schemas, String definition);
+	Schema match(List<Schema> schemas, String definition, List<Schema> schemaReferences);
 
 	String getFormat();
 
