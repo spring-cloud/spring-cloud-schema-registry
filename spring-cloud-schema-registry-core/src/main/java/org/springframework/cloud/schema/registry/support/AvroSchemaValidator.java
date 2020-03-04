@@ -35,15 +35,23 @@ public class AvroSchemaValidator implements SchemaValidator {
 	 */
 	public static final String AVRO_FORMAT = "avro";
 
+	private Parser parseReferences(Parser parser, List<Schema> schemaReferences) {
+		for (Schema schemaReference : schemaReferences) {
+			if (!schemaReference.getReferences().isEmpty()) {
+				parser = parseReferences(parser, schemaReference.getReferences());
+			}
+			parser.parse(schemaReference.getDefinition());
+		}
+		return parser;
+	}
+
 	@Override
 	public boolean isValid(String definition, List<Schema> schemaReferences) {
 		boolean result = true;
 		try {
 			Parser avroParser = new Parser();
 			if (schemaReferences != null) {
-				for (Schema schemaReference : schemaReferences) {
-					avroParser.parse(schemaReference.getDefinition());
-				}
+				avroParser = parseReferences(avroParser, schemaReferences);
 			}
 			avroParser.parse(definition);
 		}
@@ -58,9 +66,7 @@ public class AvroSchemaValidator implements SchemaValidator {
 		try {
 			Parser avroParser = new Parser();
 			if (schemaReferences != null) {
-				for (Schema schemaReference : schemaReferences) {
-					avroParser.parse(schemaReference.getDefinition());
-				}
+				avroParser = parseReferences(avroParser, schemaReferences);
 			}
 			avroParser.parse(definition);
 		}
@@ -79,17 +85,13 @@ public class AvroSchemaValidator implements SchemaValidator {
 		Schema result = null;
 		Parser avroParser = new Parser();
 		if (schemaReferences != null) {
-			for (Schema schemaReference : schemaReferences) {
-				avroParser.parse(schemaReference.getDefinition());
-			}
+			avroParser = parseReferences(avroParser, schemaReferences);
 		}
 		org.apache.avro.Schema source = avroParser.parse(definition);
 		for (Schema s : schemas) {
 			avroParser = new Parser();
 			if (schemaReferences != null) {
-				for (Schema schemaReference : schemaReferences) {
-					avroParser.parse(schemaReference.getDefinition());
-				}
+				avroParser = parseReferences(avroParser, schemaReferences);
 			}
 			org.apache.avro.Schema target = avroParser.parse(s.getDefinition());
 			if (target.equals(source)) {
