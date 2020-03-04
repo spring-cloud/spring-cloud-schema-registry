@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.schema.registry.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -56,7 +57,7 @@ public class Schema {
 	@OneToMany
 	@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "subject")
 	@JsonIdentityReference(alwaysAsId = true)
-	private List<Schema> references;
+	private List<Schema> references = new ArrayList<>();
 
 	@Lob
 	@Column(name = "DEFINITION", nullable = false, length = 8192)

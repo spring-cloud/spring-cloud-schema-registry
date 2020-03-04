@@ -94,6 +94,7 @@ public class ServerController {
 
 		if (schemaReferenceHeader != null) {
 			schemaReferences = schemaReferenceResolver(schemaReferenceHeader, schema.getFormat());
+			schema.setReferences(schemaReferences);
 		}
 
 		validator.validate(schema.getDefinition(), schemaReferences);
@@ -102,7 +103,6 @@ public class ServerController {
 		List<Schema> registeredEntities = this.repository
 				.findBySubjectAndFormatOrderByVersion(schema.getSubject(),
 						schema.getFormat());
-		schema.setReferences(schemaReferences);
 		if (registeredEntities.isEmpty()) {
 			schema.setVersion(1);
 			result = this.repository.save(schema);
