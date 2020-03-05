@@ -90,8 +90,8 @@ public class AvroSchemaValidator implements SchemaValidator {
 		org.apache.avro.Schema source = avroParser.parse(definition);
 		for (Schema s : schemas) {
 			avroParser = new Parser();
-			if (schemaReferences != null) {
-				avroParser = parseReferences(avroParser, schemaReferences);
+			if (!s.getReferences().isEmpty()) {
+				avroParser = parseReferences(avroParser, s.getReferences());
 			}
 			org.apache.avro.Schema target = avroParser.parse(s.getDefinition());
 			if (target.equals(source)) {
