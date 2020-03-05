@@ -67,6 +67,10 @@ public class ServerController {
 
 	private final SchemaServerProperties schemaServerProperties;
 
+	private final String schemaReferenceRegex = "(?<subject>.*)\\+v(?<version>\\d+)";
+
+	private final Pattern schemaReferencePattern = Pattern.compile(schemaReferenceRegex);
+
 	public ServerController(SchemaRepository repository,
 			Map<String, SchemaValidator> validators,
 			SchemaServerProperties schemaServerProperties) {
@@ -301,8 +305,6 @@ public class ServerController {
 		Schema schemaReference;
 		String subject;
 		Integer version;
-		final String schemaReferenceRegex = "(?<subject>.*)\\+v(?<version>\\d+)";
-		final Pattern schemaReferencePattern = Pattern.compile(schemaReferenceRegex);
 		Matcher schemaReferenceMatcher;
 		for (String schemaReferenceEntry : schemaReferenceHeader.split(";")) {
 			schemaReferenceMatcher = schemaReferencePattern.matcher(schemaReferenceEntry);
@@ -324,7 +326,7 @@ public class ServerController {
 					String.format("Could not find Schema by subject: %s, format: %s",
 							subject, format));
 				}
-				schemaReference = registeredEntities.get(0);
+				schemaReference = registeredEntities.get(registeredEntities.size() - 1);
 			}
 			schemaReferences.add(schemaReference);
 		}
