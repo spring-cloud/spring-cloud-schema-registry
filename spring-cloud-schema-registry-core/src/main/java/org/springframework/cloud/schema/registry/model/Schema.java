@@ -58,8 +58,7 @@ public class Schema {
 	@ManyToMany
 	private List<Schema> references = new ArrayList<>();
 
-	@Lob
-	@Column(name = "DEFINITION", nullable = false, length = 8192)
+	@Column(name = "DEFINITION", columnDefinition = "text", nullable = false, length = 8192)
 	private String definition;
 
 	public Integer getId() {
