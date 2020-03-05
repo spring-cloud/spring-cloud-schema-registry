@@ -21,10 +21,11 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -54,9 +55,9 @@ public class Schema {
 	@Column(name = "FORMAT", nullable = false)
 	private String format;
 
-	@OneToMany
 	@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "subject")
 	@JsonIdentityReference(alwaysAsId = true)
+	@ManyToMany(fetch = FetchType.EAGER)
 	private List<Schema> references = new ArrayList<>();
 
 	@Lob
