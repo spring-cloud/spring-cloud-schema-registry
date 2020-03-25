@@ -166,4 +166,34 @@ public class ConfluentSchemaRegistryClientTests {
 		assertThat(expected.getCause() instanceof HttpStatusCodeException).isTrue();
 		this.mockRestServiceServer.verify();
 	}
+
+	@Test
+	public void fetchById() {
+		this.mockRestServiceServer
+				.expect(requestTo("http://localhost:8081/schemas/ids/1"))
+				.andExpect(method(HttpMethod.GET))
+				.andExpect(
+						header("Content-Type", "application/vnd.schemaregistry.v1+json"))
+				.andExpect(header("Accept", "application/vnd.schemaregistry.v1+json"))
+				.andRespond(withSuccess("{\"schema\":\"\"}", MediaType.APPLICATION_JSON));
+		ConfluentSchemaRegistryClient client = new ConfluentSchemaRegistryClient(
+				this.restTemplate);
+		String schema = client.fetch(1);
+		assertThat(schema).isEqualTo("");
+		this.mockRestServiceServer.verify();
+	}
+
+	@Test(expected = SchemaNotFoundException.class)
+	public void fetchByIdSchemaNotFound() {
+		this.mockRestServiceServer
+				.expect(requestTo("http://localhost:8081/schemas/ids/1"))
+				.andExpect(method(HttpMethod.GET))
+				.andExpect(
+						header("Content-Type", "application/vnd.schemaregistry.v1+json"))
+				.andExpect(header("Accept", "application/vnd.schemaregistry.v1+json"))
+				.andRespond(withStatus(HttpStatus.NOT_FOUND));
+		ConfluentSchemaRegistryClient client = new ConfluentSchemaRegistryClient(
+				this.restTemplate);
+		String schema = client.fetch(1);
+	}
 }
