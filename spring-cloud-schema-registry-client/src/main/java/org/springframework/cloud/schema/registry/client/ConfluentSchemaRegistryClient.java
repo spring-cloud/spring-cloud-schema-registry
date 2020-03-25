@@ -150,7 +150,7 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 
 	@Override
 	public String fetch(int id) {
-		String path = String.format("/schemas/%d", id);
+		String path = String.format("/schemas/ids/%d", id);
 		HttpHeaders headers = new HttpHeaders();
 		headers.put("Accept", ACCEPT_HEADERS);
 		headers.add("Content-Type", "application/vnd.schemaregistry.v1+json");
