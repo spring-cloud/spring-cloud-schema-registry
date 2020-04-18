@@ -137,10 +137,10 @@ Default: `org.springframework.cloud.stream.schema.avro.DefaultSubjectNamingStrat
 
 === Apache Avro Message Converters
 
-Spring Cloud Stream provides support for schema-based message converters through its `spring-cloud-stream-schema` module.
+Spring Cloud Stream provides support for schema-based message converters through its `spring-cloud-schema-registry-client` module.
 Currently, the only serialization format supported out of the box for schema-based message converters is Apache Avro, with more formats to be added in future versions.
 
-The `spring-cloud-stream-schema` module contains two types of message converters that can be used for Apache Avro serialization:
+The `spring-cloud-schema-registry-client` module contains two types of message converters that can be used for Apache Avro serialization:
 
 * Converters that use the class information of the serialized or deserialized objects or a schema with a location known at startup.
 * Converters that use a schema registry. They locate the schemas at runtime and dynamically register new schemas as domain objects evolve.
