@@ -10,7 +10,7 @@ When organizations have a messaging based pub/sub architecture and multiple prod
 When such a schema needs to evolve to accommodate new business requirements, the existing components are still required to continue to work.
 This project provides support for a standalone schema registry server using which aforementioned schema can be registered and used by the applications.
 It also contains support for avro based schema registry clients, which essentially provide message converters that communicates with the schema registry for reconciling schema during message conversion.
-The schema evolution support provided by this project works both with the aforementioned standalone schema registry as well as the scheam registry provided by Confluent that specifically works with Apache Kafka.
+The schema evolution support provided by this project works both with the aforementioned standalone schema registry as well as the schema registry provided by Confluent that specifically works with Apache Kafka.
 
 ==== Spring Cloud Schema Registry overview
 
