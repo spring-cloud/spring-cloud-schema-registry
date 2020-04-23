@@ -67,7 +67,7 @@
 			<artifactId>jackson-dataformat-avro</artifactId>
 			<exclusions>
 				<exclusion>
-					<groupId>org.apache.agro</groupId>
+					<groupId>org.apache.avro</groupId>
 					<artifactId>avro</artifactId>
 				</exclusion>
 			</exclusions>
