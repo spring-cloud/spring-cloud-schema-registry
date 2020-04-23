@@ -9,7 +9,7 @@
 
 	<artifactId>spring-cloud-schema-registry-client</artifactId>
 	<properties>
-		<avro.version>1.8.2</avro.version>
+		<avro.version>1.9.2</avro.version>
 	</properties>
 
 	<dependencies>
@@ -65,6 +65,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-avro</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.agro</groupId>
+					<artifactId>avro</artifactId>
+				</exclusion>
+			</exclusions>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
