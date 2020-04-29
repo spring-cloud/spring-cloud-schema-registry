@@ -18,6 +18,7 @@ package org.springframework.cloud.schema.registry.client.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.schema.registry.client.CachingRegistryClient;
 import org.springframework.cloud.schema.registry.client.DefaultSchemaRegistryClient;
 import org.springframework.cloud.schema.registry.client.SchemaRegistryClient;
@@ -36,8 +37,9 @@ public class SchemaRegistryClientConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public SchemaRegistryClient schemaRegistryClient(SchemaRegistryClientProperties schemaRegistryClientProperties) {
-		DefaultSchemaRegistryClient defaultSchemaRegistryClient = new DefaultSchemaRegistryClient();
+	public SchemaRegistryClient schemaRegistryClient(SchemaRegistryClientProperties schemaRegistryClientProperties,
+			RestTemplateBuilder restTemplateBuilder) {
+		DefaultSchemaRegistryClient defaultSchemaRegistryClient = new DefaultSchemaRegistryClient(restTemplateBuilder);
 
 		if (StringUtils.hasText(schemaRegistryClientProperties.getEndpoint())) {
 			defaultSchemaRegistryClient

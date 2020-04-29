@@ -73,6 +73,12 @@
 			</exclusions>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<!-- used for testing https://github.com/spring-cloud/spring-cloud-schema-registry/issues/19 -->
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<scope>tests</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

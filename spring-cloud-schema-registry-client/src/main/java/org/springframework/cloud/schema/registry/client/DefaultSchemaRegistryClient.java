@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.cloud.schema.registry.client;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.schema.registry.SchemaReference;
 import org.springframework.cloud.schema.registry.SchemaRegistrationResponse;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Marius Bogoevici
  * @author Vinicius Carvalho
+ * @author Christian Tzolov
  */
 public class DefaultSchemaRegistryClient implements SchemaRegistryClient {
 
@@ -35,8 +37,8 @@ public class DefaultSchemaRegistryClient implements SchemaRegistryClient {
 
 	private String endpoint = "http://localhost:8990";
 
-	public DefaultSchemaRegistryClient() {
-		this(new RestTemplate());
+	public DefaultSchemaRegistryClient(RestTemplateBuilder builder) {
+		this(builder.build());
 	}
 
 	public DefaultSchemaRegistryClient(RestTemplate restTemplate) {

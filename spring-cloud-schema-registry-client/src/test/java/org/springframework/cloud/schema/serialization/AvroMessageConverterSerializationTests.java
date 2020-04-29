@@ -41,6 +41,7 @@ import org.junit.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.support.NoOpCacheManager;
 import org.springframework.cloud.schema.registry.EnableSchemaRegistryServer;
 import org.springframework.cloud.schema.registry.SchemaReference;
@@ -72,6 +73,8 @@ public class AvroMessageConverterSerializationTests {
 	Log logger = LogFactory.getLog(getClass());
 
 	private ConfigurableApplicationContext schemaRegistryServerContext;
+
+	private RestTemplateBuilder restTemplateBuilder;
 
 	public static Command notification() {
 		Command messageToSend = getCommandToSend();
@@ -113,8 +116,8 @@ public class AvroMessageConverterSerializationTests {
 	@Before
 	public void setup() {
 		this.schemaRegistryServerContext = SpringApplication.run(
-				ServerApplication.class,
-				"--spring.main.allow-bean-definition-overriding=true");
+				ServerApplication.class, "--spring.main.allow-bean-definition-overriding=true");
+		restTemplateBuilder = this.schemaRegistryServerContext.getBean(RestTemplateBuilder.class);
 	}
 
 	@After
@@ -124,7 +127,7 @@ public class AvroMessageConverterSerializationTests {
 
 	@Test
 	public void testSchemaImport() throws Exception {
-		SchemaRegistryClient client = new DefaultSchemaRegistryClient();
+		SchemaRegistryClient client = new DefaultSchemaRegistryClient(restTemplateBuilder);
 		AvroSchemaServiceManager manager = new AvroSchemaServiceManagerImpl();
 		AvroSchemaRegistryClientMessageConverter converter = new AvroSchemaRegistryClientMessageConverter(
 				client, new NoOpCacheManager(), manager);
@@ -152,7 +155,7 @@ public class AvroMessageConverterSerializationTests {
 				.getClassLoader().getResourceAsStream("schemas/user.avsc"));
 		GenericRecord genericRecord = new GenericData.Record(v1);
 		genericRecord.put("name", "joe");
-		SchemaRegistryClient client = new DefaultSchemaRegistryClient();
+		SchemaRegistryClient client = new DefaultSchemaRegistryClient(restTemplateBuilder);
 		AvroSchemaServiceManager manager = new AvroSchemaServiceManagerImpl();
 		AvroSchemaRegistryClientMessageConverter converter = new AvroSchemaRegistryClientMessageConverter(
 				client, new NoOpCacheManager(), manager);
@@ -184,7 +187,7 @@ public class AvroMessageConverterSerializationTests {
 				.getClassLoader().getResourceAsStream("schemas/user.avsc"));
 		GenericRecord genericRecord = new GenericData.Record(v1);
 		genericRecord.put("name", "joe");
-		SchemaRegistryClient client = new DefaultSchemaRegistryClient();
+		SchemaRegistryClient client = new DefaultSchemaRegistryClient(restTemplateBuilder);
 		client.register("user", "avro", v1.toString());
 		AvroSchemaServiceManager manager = new AvroSchemaServiceManagerImpl();
 		AvroSchemaRegistryClientMessageConverter converter = new AvroSchemaRegistryClientMessageConverter(
