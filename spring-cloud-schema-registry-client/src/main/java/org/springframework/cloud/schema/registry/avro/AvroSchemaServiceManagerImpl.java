@@ -41,11 +41,11 @@ import org.springframework.stereotype.Component;
 /**
  * Default Concrete implementation of  {@link AvroSchemaServiceManager}.
  *
- * Helps to substitute the default implementation of {@link org.apache.avro.Schema}
- * Generation using Custom Avro schema generator
+ * Helps to substitute the default implementation of {@link org.apache.avro.Schema} Generation using Custom Avro
+ * schema generator
  *
- * Provide a custom bean definition of {@link AvroSchemaServiceManager} and mark
- * it as @Primary to override this default implementation
+ * Provide a custom bean definition of {@link AvroSchemaServiceManager} and mark it as @Primary to override this
+ * default implementation
  *
  * @author Ish Mahajan
  *
@@ -58,8 +58,7 @@ public class AvroSchemaServiceManagerImpl implements AvroSchemaServiceManager {
 
 	/**
 	 * get {@link Schema}.
-	 * @param clazz {@link Class} for which schema generation
-	 * is required
+	 * @param clazz {@link Class} for which schema generation is required
 	 * @return returns avro schema for given class
 	 */
 	@Override
@@ -102,21 +101,21 @@ public class AvroSchemaServiceManagerImpl implements AvroSchemaServiceManager {
 	/**
 	 * get {@link DatumReader}.
 	 * @param type {@link Class} of java object which needs to be serialized
-	 * @param schema {@link Schema} default schema of object which needs to be de-serialized
+	 * @param readerSchema {@link Schema} default schema of object which needs to be de-serialized
 	 * @param writerSchema {@link Schema} writerSchema provided at run time
 	 * @return datum reader which can be used to read Avro payload
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public DatumReader<Object> getDatumReader(Class<?> type, Schema schema, Schema writerSchema) {
+	public DatumReader<Object> getDatumReader(Class<?> type, Schema readerSchema, Schema writerSchema) {
 		DatumReader<Object> reader = null;
 		if (SpecificRecord.class.isAssignableFrom(type)) {
-			if (schema != null) {
+			if (readerSchema != null) {
 				if (writerSchema != null) {
-					reader = new SpecificDatumReader<>(writerSchema, schema);
+					reader = new SpecificDatumReader<>(writerSchema, readerSchema);
 				}
 				else {
-					reader = new SpecificDatumReader<>(schema);
+					reader = new SpecificDatumReader<>(readerSchema);
 				}
 			}
 			else {
@@ -127,12 +126,12 @@ public class AvroSchemaServiceManagerImpl implements AvroSchemaServiceManager {
 			}
 		}
 		else if (GenericRecord.class.isAssignableFrom(type)) {
-			if (schema != null) {
+			if (readerSchema != null) {
 				if (writerSchema != null) {
-					reader = new GenericDatumReader<>(writerSchema, schema);
+					reader = new GenericDatumReader<>(writerSchema, readerSchema);
 				}
 				else {
-					reader = new GenericDatumReader<>(schema);
+					reader = new GenericDatumReader<>(readerSchema);
 				}
 			}
 			else {
@@ -149,7 +148,7 @@ public class AvroSchemaServiceManagerImpl implements AvroSchemaServiceManager {
 		}
 		if (reader == null) {
 			throw new MessageConversionException("No schema can be inferred from type "
-				+ type.getName() + " and no schema has been explicitly configured.");
+					+ type.getName() + " and no schema has been explicitly configured.");
 		}
 		return reader;
 	}
@@ -164,10 +163,9 @@ public class AvroSchemaServiceManagerImpl implements AvroSchemaServiceManager {
 	 * @throws IOException is thrown in case of error
 	 */
 	@Override
-	public Object readData(Class<? extends Object> clazz, byte[] payload, Schema readerSchema,
-												Schema writerSchema) throws IOException {
-		DatumReader<Object> reader = this.getDatumReader(clazz,
-			readerSchema, writerSchema);
+	public Object readData(Class<? extends Object> clazz, byte[] payload, Schema readerSchema, Schema writerSchema)
+			throws IOException {
+		DatumReader<Object> reader = this.getDatumReader(clazz, readerSchema, writerSchema);
 		Decoder decoder = DecoderFactory.get().binaryDecoder(payload, null);
 		return reader.read(null, decoder);
 	}

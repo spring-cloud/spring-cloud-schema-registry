@@ -50,43 +50,36 @@ public class AvroMessageConverterAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(AvroSchemaRegistryClientMessageConverter.class)
 	public AvroSchemaRegistryClientMessageConverter avroSchemaMessageConverter(
-			SchemaRegistryClient schemaRegistryClient, AvroSchemaServiceManager avroSchemaServiceManager,
+			SchemaRegistryClient schemaRegistryClient,
+			AvroSchemaServiceManager avroSchemaServiceManager,
 			AvroMessageConverterProperties avroMessageConverterProperties) {
-		AvroSchemaRegistryClientMessageConverter avroSchemaRegistryClientMessageConverter;
-		avroSchemaRegistryClientMessageConverter = new AvroSchemaRegistryClientMessageConverter(
-				schemaRegistryClient, cacheManager(), avroSchemaServiceManager);
+
+		AvroSchemaRegistryClientMessageConverter avroSchemaRegistryClientMessageConverter =
+				new AvroSchemaRegistryClientMessageConverter(schemaRegistryClient, cacheManager(), avroSchemaServiceManager);
+
 		avroSchemaRegistryClientMessageConverter.setDynamicSchemaGenerationEnabled(
 				avroMessageConverterProperties.isDynamicSchemaGenerationEnabled());
+
 		if (avroMessageConverterProperties.getReaderSchema() != null) {
-			avroSchemaRegistryClientMessageConverter.setReaderSchema(
-					avroMessageConverterProperties.getReaderSchema());
+			avroSchemaRegistryClientMessageConverter.setReaderSchema(avroMessageConverterProperties.getReaderSchema());
 		}
-		if (!ObjectUtils
-				.isEmpty(avroMessageConverterProperties.getSchemaLocations())) {
-			avroSchemaRegistryClientMessageConverter.setSchemaLocations(
-					avroMessageConverterProperties.getSchemaLocations());
+		if (!ObjectUtils.isEmpty(avroMessageConverterProperties.getSchemaLocations())) {
+			avroSchemaRegistryClientMessageConverter.setSchemaLocations(avroMessageConverterProperties.getSchemaLocations());
 		}
-		if (!ObjectUtils
-				.isEmpty(avroMessageConverterProperties.getSchemaImports())) {
-			avroSchemaRegistryClientMessageConverter.setSchemaImports(
-					avroMessageConverterProperties.getSchemaImports());
+		if (!ObjectUtils.isEmpty(avroMessageConverterProperties.getSchemaImports())) {
+			avroSchemaRegistryClientMessageConverter.setSchemaImports(avroMessageConverterProperties.getSchemaImports());
 		}
-		avroSchemaRegistryClientMessageConverter
-				.setPrefix(avroMessageConverterProperties.getPrefix());
+		avroSchemaRegistryClientMessageConverter.setPrefix(avroMessageConverterProperties.getPrefix());
 
 		try {
-			Class<?> clazz = avroMessageConverterProperties
-					.getSubjectNamingStrategy();
+			Class<?> clazz = avroMessageConverterProperties.getSubjectNamingStrategy();
 			Constructor constructor = ReflectionUtils.accessibleConstructor(clazz);
-
 			avroSchemaRegistryClientMessageConverter.setSubjectNamingStrategy(
 					(SubjectNamingStrategy) constructor.newInstance());
 		}
 		catch (Exception ex) {
 			throw new IllegalStateException("Unable to create SubjectNamingStrategy "
-					+ avroMessageConverterProperties.getSubjectNamingStrategy()
-							.toString(),
-					ex);
+					+ avroMessageConverterProperties.getSubjectNamingStrategy().toString(), ex);
 		}
 
 		return avroSchemaRegistryClientMessageConverter;

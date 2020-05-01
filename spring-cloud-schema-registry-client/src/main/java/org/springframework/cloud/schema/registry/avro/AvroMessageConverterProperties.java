@@ -74,8 +74,7 @@ public class AvroMessageConverterProperties {
 		return this.dynamicSchemaGenerationEnabled;
 	}
 
-	public void setDynamicSchemaGenerationEnabled(
-			boolean dynamicSchemaGenerationEnabled) {
+	public void setDynamicSchemaGenerationEnabled(boolean dynamicSchemaGenerationEnabled) {
 		this.dynamicSchemaGenerationEnabled = dynamicSchemaGenerationEnabled;
 	}
 
@@ -91,8 +90,7 @@ public class AvroMessageConverterProperties {
 		return this.subjectNamingStrategy;
 	}
 
-	public void setSubjectNamingStrategy(
-			Class<? extends SubjectNamingStrategy> subjectNamingStrategy) {
+	public void setSubjectNamingStrategy(Class<? extends SubjectNamingStrategy> subjectNamingStrategy) {
 		Assert.notNull(subjectNamingStrategy, "cannot be null");
 		this.subjectNamingStrategy = subjectNamingStrategy;
 	}

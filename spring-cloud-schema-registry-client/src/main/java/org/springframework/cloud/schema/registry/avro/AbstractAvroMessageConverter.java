@@ -86,8 +86,7 @@ public abstract class AbstractAvroMessageConverter extends AbstractMessageConver
 	}
 
 	@Override
-	protected Object convertFromInternal(Message<?> message, Class<?> targetClass,
-			Object conversionHint) {
+	protected Object convertFromInternal(Message<?> message, Class<?> targetClass, Object conversionHint) {
 		Object result;
 		try {
 			byte[] payload = (byte[]) message.getPayload();
@@ -114,8 +113,7 @@ public abstract class AbstractAvroMessageConverter extends AbstractMessageConver
 	}
 
 	@Override
-	protected Object convertToInternal(Object payload, MessageHeaders headers,
-			Object conversionHint) {
+	protected Object convertToInternal(Object payload, MessageHeaders headers, Object conversionHint) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			MimeType hintedContentType = null;
@@ -124,8 +122,7 @@ public abstract class AbstractAvroMessageConverter extends AbstractMessageConver
 			}
 			Schema schema = resolveSchemaForWriting(payload, headers, hintedContentType);
 			@SuppressWarnings("unchecked")
-			DatumWriter<Object> writer = avroSchemaServiceManager()
-							.getDatumWriter(payload.getClass(), schema);
+			DatumWriter<Object> writer = avroSchemaServiceManager().getDatumWriter(payload.getClass(), schema);
 			Encoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
 			writer.write(payload, encoder);
 			encoder.flush();
@@ -136,8 +133,7 @@ public abstract class AbstractAvroMessageConverter extends AbstractMessageConver
 		return baos.toByteArray();
 	}
 
-	protected abstract Schema resolveSchemaForWriting(Object payload,
-			MessageHeaders headers, MimeType hintedContentType);
+	protected abstract Schema resolveSchemaForWriting(Object payload, MessageHeaders headers, MimeType hintedContentType);
 
 	protected abstract Schema resolveWriterSchemaForDeserialization(MimeType mimeType);
 
