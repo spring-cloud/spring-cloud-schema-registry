@@ -1,0 +1,11 @@
+{
+  "namespace": "example.avro",
+  "type": "record",
+  "name": "Reference",
+  "fields": [
+    {
+      "name": "user",
+      "type": "example.avro.User"
+    }
+  ]
+}

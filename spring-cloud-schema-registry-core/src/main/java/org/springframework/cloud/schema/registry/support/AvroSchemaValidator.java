@@ -18,6 +18,7 @@ package org.springframework.cloud.schema.registry.support;
 
 import java.util.List;
 
+import org.apache.avro.Schema.Parser;
 import org.apache.avro.SchemaParseException;
 
 import org.springframework.cloud.schema.registry.model.Compatibility;
@@ -34,11 +35,25 @@ public class AvroSchemaValidator implements SchemaValidator {
 	 */
 	public static final String AVRO_FORMAT = "avro";
 
+	private Parser parseReferences(Parser parser, List<Schema> schemaReferences) {
+		for (Schema schemaReference : schemaReferences) {
+			if (!schemaReference.getReferences().isEmpty()) {
+				parser = parseReferences(parser, schemaReference.getReferences());
+			}
+			parser.parse(schemaReference.getDefinition());
+		}
+		return parser;
+	}
+
 	@Override
-	public boolean isValid(String definition) {
+	public boolean isValid(String definition, List<Schema> schemaReferences) {
 		boolean result = true;
 		try {
-			new org.apache.avro.Schema.Parser().parse(definition);
+			Parser avroParser = new Parser();
+			if (schemaReferences != null) {
+				avroParser = parseReferences(avroParser, schemaReferences);
+			}
+			avroParser.parse(definition);
 		}
 		catch (SchemaParseException ex) {
 			result = false;
@@ -47,9 +62,13 @@ public class AvroSchemaValidator implements SchemaValidator {
 	}
 
 	@Override
-	public void validate(String definition) {
+	public void validate(String definition, List<Schema> schemaReferences) {
 		try {
-			new org.apache.avro.Schema.Parser().parse(definition);
+			Parser avroParser = new Parser();
+			if (schemaReferences != null) {
+				avroParser = parseReferences(avroParser, schemaReferences);
+			}
+			avroParser.parse(definition);
 		}
 		catch (SchemaParseException ex) {
 			throw new InvalidSchemaException((ex.getMessage()));
@@ -62,11 +81,19 @@ public class AvroSchemaValidator implements SchemaValidator {
 	}
 
 	@Override
-	public Schema match(List<Schema> schemas, String definition) {
+	public Schema match(List<Schema> schemas, String definition, List<Schema> schemaReferences) {
 		Schema result = null;
-		org.apache.avro.Schema source = new org.apache.avro.Schema.Parser().parse(definition);
+		Parser avroParser = new Parser();
+		if (schemaReferences != null) {
+			avroParser = parseReferences(avroParser, schemaReferences);
+		}
+		org.apache.avro.Schema source = avroParser.parse(definition);
 		for (Schema s : schemas) {
-			org.apache.avro.Schema target = new org.apache.avro.Schema.Parser().parse(s.getDefinition());
+			avroParser = new Parser();
+			if (!s.getReferences().isEmpty()) {
+				avroParser = parseReferences(avroParser, s.getReferences());
+			}
+			org.apache.avro.Schema target = avroParser.parse(s.getDefinition());
 			if (target.equals(source)) {
 				result = s;
 				break;

@@ -33,17 +33,19 @@ public interface SchemaValidator {
 	/**
 	 * Verifies if a definition is a valid schema.
 	 * @param definition - The textual representation of the schema file
+	 * @param schemaReferences - list of schemas that are referenced inside the definition
 	 * @return true if valid, false otherwise
 	 */
-	boolean isValid(String definition);
+	boolean isValid(String definition, List<Schema> schemaReferences);
 
 	/**
 	 * Validates a schema definition and throws an {@link InvalidSchemaException} when the schema is invalid.
 	 * The exception is expected to have the violation description.
 	 * @param definition - The textual representation of the schema file
+	 * @param schemaReferences - list of schemas that are referenced inside the definition
 	 */
-	default void validate(String definition) {
-		if (!this.isValid(definition)) {
+	default void validate(String definition, List<Schema> schemaReferences) {
+		if (!this.isValid(definition, schemaReferences)) {
 			throw new InvalidSchemaException("Invalid Schema");
 		}
 	}
@@ -61,9 +63,10 @@ public interface SchemaValidator {
 	 * Return the Schema that is represented by the definition.
 	 * @param schemas List of schemas to be tested
 	 * @param definition Textual representation of the schema
+	 * @param schemaReferences List of schemas that are referenced inside the definition
 	 * @return A full Schema object with identifier and subject properties
 	 */
-	Schema match(List<Schema> schemas, String definition);
+	Schema match(List<Schema> schemas, String definition, List<Schema> schemaReferences);
 
 	String getFormat();
 

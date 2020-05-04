@@ -16,12 +16,19 @@
 
 package org.springframework.cloud.schema.registry.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 /**
  * @author Vinicius Carvalho
@@ -46,8 +53,12 @@ public class Schema {
 	@Column(name = "FORMAT", nullable = false)
 	private String format;
 
-	@Lob
-	@Column(name = "DEFINITION", nullable = false, length = 8192)
+	@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "subject")
+	@JsonIdentityReference(alwaysAsId = true)
+	@ManyToMany
+	private List<Schema> references = new ArrayList<>();
+
+	@Column(name = "DEFINITION", columnDefinition = "text", nullable = false, length = 8192)
 	private String definition;
 
 	public Integer getId() {
@@ -80,6 +91,22 @@ public class Schema {
 
 	public void setFormat(String format) {
 		this.format = format;
+	}
+
+	public List<Schema> getReferences() {
+		return this.references;
+	}
+
+	public void setReferences(List<Schema> references) {
+		this.references = references;
+	}
+
+	public void addReference(Schema schemaReference) {
+		this.references.add(schemaReference);
+	}
+
+	public void removeReference(Schema schemaReference) {
+		this.references.remove(schemaReference);
 	}
 
 	public String getDefinition() {

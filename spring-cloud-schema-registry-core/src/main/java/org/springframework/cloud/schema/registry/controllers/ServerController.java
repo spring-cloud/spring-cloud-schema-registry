@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.schema.registry.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.cloud.schema.registry.config.SchemaServerProperties;
 import org.springframework.cloud.schema.registry.model.Schema;
@@ -38,6 +41,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -63,6 +67,10 @@ public class ServerController {
 
 	private final SchemaServerProperties schemaServerProperties;
 
+	private final String schemaReferenceRegex = "(?<subject>.*)\\+v(?<version>\\d+)";
+
+	private final Pattern schemaReferencePattern = Pattern.compile(schemaReferenceRegex);
+
 	public ServerController(SchemaRepository repository,
 			Map<String, SchemaValidator> validators,
 			SchemaServerProperties schemaServerProperties) {
@@ -74,7 +82,9 @@ public class ServerController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, path = "/", consumes = "application/json", produces = "application/json")
-	public synchronized ResponseEntity<Schema> register(@RequestBody Schema schema, UriComponentsBuilder builder) {
+	public synchronized ResponseEntity<Schema> register(
+			@RequestHeader(value = "Schema-Reference", required = false) String schemaReferenceHeader,
+			@RequestBody Schema schema, UriComponentsBuilder builder) {
 
 		SchemaValidator validator = this.validators.get(schema.getFormat());
 
@@ -84,7 +94,14 @@ public class ServerController {
 							.collectionToCommaDelimitedString(this.validators.keySet())));
 		}
 
-		validator.validate(schema.getDefinition());
+		List<Schema> schemaReferences = null;
+
+		if (schemaReferenceHeader != null) {
+			schemaReferences = schemaReferenceResolver(schemaReferenceHeader, schema.getFormat());
+			schema.setReferences(schemaReferences);
+		}
+
+		validator.validate(schema.getDefinition(), schemaReferences);
 
 		Schema result;
 		List<Schema> registeredEntities = this.repository
@@ -95,7 +112,7 @@ public class ServerController {
 			result = this.repository.save(schema);
 		}
 		else {
-			result = validator.match(registeredEntities, schema.getDefinition());
+			result = validator.match(registeredEntities, schema.getDefinition(), schemaReferences);
 			if (result == null) {
 				schema.setVersion(
 						registeredEntities.get(registeredEntities.size() - 1).getVersion()
@@ -262,6 +279,13 @@ public class ServerController {
 		return errorMessage("Invalid Schema", e);
 	}
 
+	@ExceptionHandler(NumberFormatException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	public String onInvalidVersion(NumberFormatException ex) {
+		return errorMessage("Version should be a numeric value", ex);
+	}
+
 	@ExceptionHandler(SchemaNotFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	@ResponseBody
@@ -274,6 +298,39 @@ public class ServerController {
 	@ResponseBody
 	public String schemaDeletionNotPermitted(SchemaDeletionNotAllowedException ex) {
 		return errorMessage("Schema deletion is not permitted", ex);
+	}
+
+	private List<Schema> schemaReferenceResolver(String schemaReferenceHeader, String format) {
+		List<Schema> schemaReferences = new ArrayList<>();
+		Schema schemaReference;
+		String subject;
+		Integer version;
+		Matcher schemaReferenceMatcher;
+		for (String schemaReferenceEntry : schemaReferenceHeader.split(";")) {
+			schemaReferenceMatcher = schemaReferencePattern.matcher(schemaReferenceEntry);
+			if (schemaReferenceMatcher.find()) {
+				subject = schemaReferenceMatcher.group("subject");
+				version = Integer.parseInt(schemaReferenceMatcher.group("version"));
+				schemaReference = this.repository.findOneBySubjectAndFormatAndVersion(subject, format, version);
+				if (schemaReference == null) {
+					throw new SchemaNotFoundException(
+						String.format("Could not find Schema by subject: %s, format: %s, version %s",
+								subject, format, version));
+				}
+			}
+			else {
+				subject = schemaReferenceEntry;
+				List<Schema> registeredEntities = this.repository.findBySubjectAndFormatOrderByVersion(subject, format);
+				if (registeredEntities.isEmpty()) {
+					throw new SchemaNotFoundException(
+					String.format("Could not find Schema by subject: %s, format: %s",
+							subject, format));
+				}
+				schemaReference = registeredEntities.get(registeredEntities.size() - 1);
+			}
+			schemaReferences.add(schemaReference);
+		}
+		return schemaReferences;
 	}
 
 	private String errorMessage(String prefix, Throwable e) {
