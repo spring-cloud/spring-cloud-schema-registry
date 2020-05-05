@@ -26,6 +26,9 @@
 		<maven-checkstyle-plugin.failsOnViolation>true</maven-checkstyle-plugin.failsOnViolation>
 		<maven-checkstyle-plugin.includeTestSourceDirectory>true</maven-checkstyle-plugin.includeTestSourceDirectory>
 		<dockerfile-maven-plugin.version>1.4.13</dockerfile-maven-plugin.version>
+		<avro.version>1.9.2</avro.version>
+		<h2.version>1.4.192</h2.version>
+		<jackson-bom.version>2.11.0</jackson-bom.version>
 	</properties>
 	<modules>
 		<module>spring-cloud-schema-registry-core</module>
@@ -39,9 +42,19 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson</groupId>
 				<artifactId>jackson-bom</artifactId>
-				<version>2.11.0.rc1</version>
+				<version>${jackson-bom.version}</version>
 				<scope>import</scope>
 				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro</artifactId>
+				<version>${avro.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+				<version>${h2.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>

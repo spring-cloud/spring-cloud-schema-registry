@@ -8,9 +8,6 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-cloud-schema-registry-client</artifactId>
-	<properties>
-		<avro.version>1.9.2</avro.version>
-	</properties>
 
 	<dependencies>
 		<dependency>
@@ -41,7 +38,6 @@
 		<dependency>
 			<groupId>org.apache.avro</groupId>
 			<artifactId>avro</artifactId>
-			<version>${avro.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
