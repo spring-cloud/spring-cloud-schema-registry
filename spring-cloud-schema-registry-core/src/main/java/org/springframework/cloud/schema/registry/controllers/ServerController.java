@@ -63,8 +63,7 @@ public class ServerController {
 
 	private final SchemaServerProperties schemaServerProperties;
 
-	public ServerController(SchemaRepository repository,
-			Map<String, SchemaValidator> validators,
+	public ServerController(SchemaRepository repository, Map<String, SchemaValidator> validators,
 			SchemaServerProperties schemaServerProperties) {
 		Assert.notNull(repository, "cannot be null");
 		Assert.notEmpty(validators, "cannot be empty");
@@ -79,17 +78,15 @@ public class ServerController {
 		SchemaValidator validator = this.validators.get(schema.getFormat());
 
 		if (validator == null) {
-			throw new UnsupportedFormatException(
-					String.format("Invalid format, supported types are: %s", StringUtils
-							.collectionToCommaDelimitedString(this.validators.keySet())));
+			throw new UnsupportedFormatException(String.format("Invalid format, supported types are: %s",
+					StringUtils.collectionToCommaDelimitedString(this.validators.keySet())));
 		}
 
 		validator.validate(schema.getDefinition());
 
 		Schema result;
-		List<Schema> registeredEntities = this.repository
-				.findBySubjectAndFormatOrderByVersion(schema.getSubject(),
-						schema.getFormat());
+		List<Schema> registeredEntities =
+				this.repository.findBySubjectAndFormatOrderByVersion(schema.getSubject(), schema.getFormat());
 		if (registeredEntities.isEmpty()) {
 			schema.setVersion(1);
 			result = this.repository.save(schema);
@@ -97,22 +94,17 @@ public class ServerController {
 		else {
 			result = validator.match(registeredEntities, schema.getDefinition());
 			if (result == null) {
-				schema.setVersion(
-						registeredEntities.get(registeredEntities.size() - 1).getVersion()
-								+ 1);
+				schema.setVersion(registeredEntities.get(registeredEntities.size() - 1).getVersion() + 1);
 				result = this.repository.save(schema);
 			}
 
 		}
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.LOCATION,
-				builder.path("/{subject}/{format}/v{version}")
-						.buildAndExpand(result.getSubject(), result.getFormat(),
-								result.getVersion())
-						.toString());
-		ResponseEntity<Schema> response = new ResponseEntity<>(result, headers,
-				HttpStatus.CREATED);
+		headers.add(HttpHeaders.LOCATION, builder.path("/{subject}/{format}/v{version}")
+				.buildAndExpand(result.getSubject(), result.getFormat(), result.getVersion())
+				.toString());
+		ResponseEntity<Schema> response = new ResponseEntity<>(result, headers, HttpStatus.CREATED);
 
 		return response;
 

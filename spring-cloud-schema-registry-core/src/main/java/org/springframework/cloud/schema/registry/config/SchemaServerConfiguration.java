@@ -49,8 +49,7 @@ public class SchemaServerConfiguration {
 		return beanFactory -> {
 			if (beanFactory instanceof BeanDefinitionRegistry) {
 				EntityScanPackages.register((BeanDefinitionRegistry) beanFactory,
-						Collections
-								.singletonList(Schema.class.getPackage().getName()));
+						Collections.singletonList(Schema.class.getPackage().getName()));
 			}
 		};
 	}

@@ -42,8 +42,7 @@ public class SchemaRegistryClientConfiguration {
 		DefaultSchemaRegistryClient defaultSchemaRegistryClient = new DefaultSchemaRegistryClient(restTemplateBuilder);
 
 		if (StringUtils.hasText(schemaRegistryClientProperties.getEndpoint())) {
-			defaultSchemaRegistryClient
-					.setEndpoint(schemaRegistryClientProperties.getEndpoint());
+			defaultSchemaRegistryClient.setEndpoint(schemaRegistryClientProperties.getEndpoint());
 		}
 
 		SchemaRegistryClient client = (schemaRegistryClientProperties.isCached())

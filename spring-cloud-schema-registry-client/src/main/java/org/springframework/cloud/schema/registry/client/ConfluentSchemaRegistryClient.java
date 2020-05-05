@@ -73,8 +73,7 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 	}
 
 	@Override
-	public SchemaRegistrationResponse register(String subject, String format,
-											String schema) {
+	public SchemaRegistrationResponse register(String subject, String format, String schema) {
 		Assert.isTrue("avro".equals(format), "Only Avro is supported");
 		HttpHeaders headers = new HttpHeaders();
 		headers.put("Accept", ACCEPT_HEADERS);
@@ -92,19 +91,18 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 		}
 		try {
 			HttpEntity<String> request = new HttpEntity<>(payload, headers);
-			ResponseEntity<Map> response = this.template.exchange(this.endpoint + "/subjects/" + subject + "/versions",
-					HttpMethod.POST, request, Map.class);
+			ResponseEntity<Map> response = this.template.exchange(
+					this.endpoint + "/subjects/" + subject + "/versions", HttpMethod.POST, request, Map.class);
 			id = (Integer) response.getBody().get("id");
 		}
 		catch (HttpStatusCodeException httpException) {
-			throw new RuntimeException(String.format(
-					"Failed to register subject %s, server replied with status %d",
+			throw new RuntimeException(String.format("Failed to register subject %s, server replied with status %d",
 					subject, httpException.getStatusCode().value()), httpException);
 		}
 
 		try {
-			ResponseEntity<List> response = this.template.getForEntity(this.endpoint + "/subjects/" + subject + "/versions",
-					List.class);
+			ResponseEntity<List> response = this.template.getForEntity(
+					this.endpoint + "/subjects/" + subject + "/versions", List.class);
 
 			final List body = response.getBody();
 			if (!CollectionUtils.isEmpty(body)) {
@@ -112,22 +110,19 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 			}
 		}
 		catch (HttpStatusCodeException httpException) {
-			throw new RuntimeException(String.format(
-					"Failed to register subject %s, server replied with status %d",
+			throw new RuntimeException(String.format("Failed to register subject %s, server replied with status %d",
 					subject, httpException.getStatusCode().value()), httpException);
 		}
 
 		SchemaRegistrationResponse schemaRegistrationResponse = new SchemaRegistrationResponse();
 		schemaRegistrationResponse.setId(id);
-		schemaRegistrationResponse
-				.setSchemaReference(new SchemaReference(subject, version, "avro"));
+		schemaRegistrationResponse.setSchemaReference(new SchemaReference(subject, version, "avro"));
 		return schemaRegistrationResponse;
 	}
 
 	@Override
 	public String fetch(SchemaReference schemaReference) {
-		String path = String.format("/subjects/%s/versions/%d",
-				schemaReference.getSubject(), schemaReference.getVersion());
+		String path = String.format("/subjects/%s/versions/%d", schemaReference.getSubject(), schemaReference.getVersion());
 		HttpHeaders headers = new HttpHeaders();
 		headers.put("Accept", ACCEPT_HEADERS);
 		headers.add("Content-Type", "application/vnd.schemaregistry.v1+json");
@@ -139,8 +134,7 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 		}
 		catch (HttpStatusCodeException e) {
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-				throw new SchemaNotFoundException(String.format(
-						"Could not find schema for reference: %s", schemaReference));
+				throw new SchemaNotFoundException(String.format("Could not find schema for reference: %s", schemaReference));
 			}
 			else {
 				throw e;
@@ -162,8 +156,7 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 		}
 		catch (HttpStatusCodeException e) {
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-				throw new SchemaNotFoundException(
-						String.format("Could not find schema with id: %s", id));
+				throw new SchemaNotFoundException(String.format("Could not find schema with id: %s", id));
 			}
 			else {
 				throw e;

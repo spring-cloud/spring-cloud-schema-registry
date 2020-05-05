@@ -61,22 +61,18 @@ public class DefaultSchemaRegistryClient implements SchemaRegistryClient {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public SchemaRegistrationResponse register(String subject, String format,
-			String schema) {
+	public SchemaRegistrationResponse register(String subject, String format, String schema) {
 		Map<String, String> requestBody = new HashMap<>();
 		requestBody.put("subject", subject);
 		requestBody.put("format", format);
 		requestBody.put("definition", schema);
-		ResponseEntity<Map> responseEntity = this.restTemplate
-				.postForEntity(this.endpoint, requestBody, Map.class);
+		ResponseEntity<Map> responseEntity = this.restTemplate.postForEntity(this.endpoint, requestBody, Map.class);
 		if (responseEntity.getStatusCode().is2xxSuccessful()) {
 			SchemaRegistrationResponse registrationResponse = new SchemaRegistrationResponse();
-			Map<String, Object> responseBody = (Map<String, Object>) responseEntity
-					.getBody();
+			Map<String, Object> responseBody = (Map<String, Object>) responseEntity.getBody();
 			registrationResponse.setId((Integer) responseBody.get("id"));
-			registrationResponse.setSchemaReference(
-					new SchemaReference(subject, (Integer) responseBody.get("version"),
-							responseBody.get("format").toString()));
+			registrationResponse.setSchemaReference(new SchemaReference(subject, (Integer) responseBody.get("version"),
+					responseBody.get("format").toString()));
 			return registrationResponse;
 		}
 		throw new RuntimeException(
@@ -90,8 +86,7 @@ public class DefaultSchemaRegistryClient implements SchemaRegistryClient {
 				+ "/" + schemaReference.getSubject() + "/" + schemaReference.getFormat()
 				+ "/v" + schemaReference.getVersion(), Map.class);
 		if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-			throw new RuntimeException(
-					"Failed to fetch schema: " + responseEntity.toString());
+			throw new RuntimeException("Failed to fetch schema: " + responseEntity.toString());
 		}
 		return (String) responseEntity.getBody().get("definition");
 	}
@@ -99,11 +94,9 @@ public class DefaultSchemaRegistryClient implements SchemaRegistryClient {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public String fetch(int id) {
-		ResponseEntity<Map> responseEntity = this.restTemplate
-				.getForEntity(this.endpoint + "/schemas/" + id, Map.class);
+		ResponseEntity<Map> responseEntity = this.restTemplate.getForEntity(this.endpoint + "/schemas/" + id, Map.class);
 		if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-			throw new RuntimeException(
-					"Failed to fetch schema: " + responseEntity.toString());
+			throw new RuntimeException("Failed to fetch schema: " + responseEntity.toString());
 		}
 		return (String) responseEntity.getBody().get("definition");
 	}
