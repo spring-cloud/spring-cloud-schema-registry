@@ -50,6 +50,8 @@ public class AvroMessageConverterProperties {
 
 	private String prefix = "vnd";
 
+	private String subjectNamePrefix;
+
 	private Class<? extends SubjectNamingStrategy> subjectNamingStrategy = DefaultSubjectNamingStrategy.class;
 
 	public Resource getReaderSchema() {
@@ -103,4 +105,11 @@ public class AvroMessageConverterProperties {
 		this.schemaImports = schemaImports;
 	}
 
+	public String getSubjectNamePrefix() {
+		return subjectNamePrefix;
+	}
+
+	public void setSubjectNamePrefix(String subjectNamePrefix) {
+		this.subjectNamePrefix = subjectNamePrefix;
+	}
 }

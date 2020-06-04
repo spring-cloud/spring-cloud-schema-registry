@@ -18,14 +18,18 @@ package org.springframework.cloud.schema.registry.avro;
 
 import org.apache.avro.Schema;
 
+import org.springframework.util.StringUtils;
+
 /**
  * @author David Kalosi
  */
 public class DefaultSubjectNamingStrategy implements SubjectNamingStrategy {
 
 	@Override
-	public String toSubject(Schema schema) {
-		return schema.getName().toLowerCase();
+	public String toSubject(String subjectNamePrefix, Schema schema) {
+		return StringUtils.hasText(subjectNamePrefix) ?
+				subjectNamePrefix + "-" + schema.getName().toLowerCase() :
+				schema.getName().toLowerCase();
 	}
 
 }

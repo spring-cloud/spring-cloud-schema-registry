@@ -81,6 +81,7 @@ public class AvroMessageConverterAutoConfiguration {
 			throw new IllegalStateException("Unable to create SubjectNamingStrategy "
 					+ avroMessageConverterProperties.getSubjectNamingStrategy().toString(), ex);
 		}
+		avroSchemaRegistryClientMessageConverter.setSubjectNamePrefix(avroMessageConverterProperties.getSubjectNamePrefix());
 
 		return avroSchemaRegistryClientMessageConverter;
 	}

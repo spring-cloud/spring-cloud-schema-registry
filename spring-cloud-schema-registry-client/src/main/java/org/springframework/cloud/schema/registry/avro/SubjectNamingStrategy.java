@@ -28,9 +28,10 @@ public interface SubjectNamingStrategy {
 	/**
 	 * Takes the Avro schema on input and returns the generated subject under which the
 	 * schema should be registered.
+	 * @param subjectNamePrefix optional subject name prefix
 	 * @param schema schema to register
 	 * @return subject name
 	 */
-	String toSubject(Schema schema);
+	String toSubject(String subjectNamePrefix, Schema schema);
 
 }

@@ -132,6 +132,8 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 
 	private String prefix = "vnd";
 
+	private String subjectNamePrefix;
+
 	private SubjectNamingStrategy subjectNamingStrategy;
 
 	/**
@@ -227,6 +229,10 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 		this.subjectNamingStrategy = subjectNamingStrategy;
 	}
 
+	public void setSubjectNamePrefix(String subjectNamePrefix) {
+		this.subjectNamePrefix = subjectNamePrefix;
+	}
+
 	@Override
 	public void afterPropertiesSet() {
 		this.versionedSchema = Pattern.compile("application/" + this.prefix
@@ -267,8 +273,8 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 		}
 	}
 
-	protected String toSubject(Schema schema) {
-		return this.subjectNamingStrategy.toSubject(schema);
+	protected String toSubject(String subjectNamePrefix, Schema schema) {
+		return this.subjectNamingStrategy.toSubject(subjectNamePrefix, schema);
 	}
 
 	@Override
@@ -300,7 +306,7 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 		}
 
 		if (parsedSchema.getRegistration() == null) {
-			SchemaRegistrationResponse response = this.schemaRegistryClient.register(toSubject(schema),
+			SchemaRegistrationResponse response = this.schemaRegistryClient.register(toSubject(this.subjectNamePrefix, schema),
 					AVRO_FORMAT, parsedSchema.getRepresentation());
 			parsedSchema.setRegistration(response);
 
@@ -376,7 +382,7 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 					+ schema.getNamespace() + "." + schema.getName());
 		}
 
-		this.schemaRegistryClient.register(toSubject(schema), AVRO_FORMAT, schema.toString());
+		this.schemaRegistryClient.register(toSubject(this.subjectNamePrefix, schema), AVRO_FORMAT, schema.toString());
 
 		if (this.logger.isInfoEnabled()) {
 			this.logger.info("Schema " + schema.getName() + " registered with id " + schema);
