@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.schema.registry.entityScanning;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.schema.registry.config.SchemaServerProperties;
@@ -28,6 +28,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+
+
 
 /**
  * @author Christian Tzolov
@@ -45,7 +48,7 @@ public abstract class AbstractServerControllerTest {
 	@Autowired
 	private WebApplicationContext wac;
 
-	@Before
+	@BeforeEach
 	public void setupMocks() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(wac)
 				.defaultRequest(get("/").accept(MediaType.APPLICATION_JSON)).build();
