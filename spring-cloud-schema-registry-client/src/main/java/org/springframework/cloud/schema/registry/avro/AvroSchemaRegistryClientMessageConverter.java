@@ -312,7 +312,7 @@ public class AvroSchemaRegistryClientMessageConverter extends AbstractAvroMessag
 			// rely on schema in response
 			schema = new Schema.Parser().parse(response.getSchema());
 			parsedSchema = new ParsedSchema(schema);
-			this.getCache(REFERENCE_CACHE_NAME).putIfAbsent(schema, parsedSchema);
+			this.getCache(REFERENCE_CACHE_NAME).put(schema, parsedSchema);
 
 			parsedSchema.setRegistration(response);
 		}
