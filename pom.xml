@@ -27,7 +27,7 @@
 		<maven-checkstyle-plugin.includeTestSourceDirectory>true</maven-checkstyle-plugin.includeTestSourceDirectory>
 		<dockerfile-maven-plugin.version>1.4.13</dockerfile-maven-plugin.version>
 		<avro.version>1.9.2</avro.version>
-		<h2.version>1.4.192</h2.version>
+		<h2.version>2.0.206</h2.version>
 		<jackson-bom.version>2.11.0</jackson-bom.version>
 	</properties>
 	<modules>
