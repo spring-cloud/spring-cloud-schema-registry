@@ -21,24 +21,33 @@ package org.springframework.cloud.schema.registry;
  */
 public class SchemaRegistrationResponse {
 
-	private int id;
+    private int id;
 
-	private SchemaReference schemaReference;
+    private SchemaReference schemaReference;
 
-	public int getId() {
-		return this.id;
-	}
+    private String schema;
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public int getId() {
+        return this.id;
+    }
 
-	public SchemaReference getSchemaReference() {
-		return this.schemaReference;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public void setSchemaReference(SchemaReference schemaReference) {
-		this.schemaReference = schemaReference;
-	}
+    public SchemaReference getSchemaReference() {
+        return this.schemaReference;
+    }
 
+    public void setSchemaReference(SchemaReference schemaReference) {
+        this.schemaReference = schemaReference;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
 }

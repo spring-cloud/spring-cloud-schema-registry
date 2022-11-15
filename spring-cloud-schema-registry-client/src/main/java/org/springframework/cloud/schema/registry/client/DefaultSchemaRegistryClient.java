@@ -73,6 +73,7 @@ public class DefaultSchemaRegistryClient implements SchemaRegistryClient {
 			registrationResponse.setId((Integer) responseBody.get("id"));
 			registrationResponse.setSchemaReference(new SchemaReference(subject, (Integer) responseBody.get("version"),
 					responseBody.get("format").toString()));
+			registrationResponse.setSchema(schema);
 			return registrationResponse;
 		}
 		throw new RuntimeException(

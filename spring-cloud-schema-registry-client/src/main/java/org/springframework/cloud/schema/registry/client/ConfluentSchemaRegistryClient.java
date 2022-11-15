@@ -83,6 +83,8 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 		String payload = null;
 		Map<String, String> maps = new HashMap<>();
 		maps.put("schema", schema);
+		SchemaRegistrationResponse schemaRegistrationResponse = new SchemaRegistrationResponse();
+		schemaRegistrationResponse.setSchema(schema);
 		try {
 			payload = this.mapper.writeValueAsString(maps);
 		}
@@ -107,6 +109,7 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 			final List body = response.getBody();
 			if (!CollectionUtils.isEmpty(body)) {
 				version = (Integer) body.get(body.size() - 1);
+				schemaRegistrationResponse.setSchema(fetch(new SchemaReference(subject, version, "avro")));
 			}
 		}
 		catch (HttpStatusCodeException httpException) {
@@ -114,7 +117,6 @@ public class ConfluentSchemaRegistryClient implements SchemaRegistryClient {
 					subject, httpException.getStatusCode().value()), httpException);
 		}
 
-		SchemaRegistrationResponse schemaRegistrationResponse = new SchemaRegistrationResponse();
 		schemaRegistrationResponse.setId(id);
 		schemaRegistrationResponse.setSchemaReference(new SchemaReference(subject, version, "avro"));
 		return schemaRegistrationResponse;
